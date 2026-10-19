@@ -105,7 +105,7 @@ export const Footer: React.FC = () => {
 
           {/* Links Column 1 */}
           <div className="space-y-3">
-            <h5 className="font-bold text-foreground uppercase tracking-wider text-[11px]">Marketplace</h5>
+            <h4 className="font-bold text-foreground uppercase tracking-wider text-[11px]">Marketplace</h4>
             <ul className="space-y-2">
               <li>
                 <Link to="/" className="hover:text-foreground transition-colors">
@@ -132,7 +132,7 @@ export const Footer: React.FC = () => {
 
           {/* Links Column 2 */}
           <div className="space-y-3">
-            <h5 className="font-bold text-foreground uppercase tracking-wider text-[11px]">Minha Conta</h5>
+            <h4 className="font-bold text-foreground uppercase tracking-wider text-[11px]">Minha Conta</h4>
             <ul className="space-y-2">
               <li>
                 <Link to="/profile" className="hover:text-foreground transition-colors">
@@ -159,7 +159,7 @@ export const Footer: React.FC = () => {
 
           {/* Links Column 3 */}
           <div className="space-y-3">
-            <h5 className="font-bold text-foreground uppercase tracking-wider text-[11px]">Documentação</h5>
+            <h4 className="font-bold text-foreground uppercase tracking-wider text-[11px]">Documentação</h4>
             <ul className="space-y-2">
               <li>
                 <Link to="/docs" className="text-primary hover:underline transition-colors font-medium">

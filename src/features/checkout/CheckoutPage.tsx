@@ -18,6 +18,7 @@ import {
   Copy,
   Receipt,
   Download,
+  ExternalLink,
 } from 'lucide-react'
 import confetti from 'canvas-confetti'
 
@@ -201,13 +202,26 @@ export const CheckoutPage: React.FC = () => {
               <span className="text-foreground-muted">Hash da Transação (TX):</span>
               <div className="flex items-center justify-between p-2 rounded bg-surface border border-border font-mono text-[11px] text-primary break-all">
                 <span>{confirmedOrder.txHash}</span>
-                <button
-                  onClick={copyTxHash}
-                  className="p-1 hover:text-white transition-colors ml-2"
-                  aria-label="Copiar Hash"
-                >
-                  {copiedTx ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                </button>
+                <div className="flex items-center gap-1.5 ml-2">
+                  <button
+                    onClick={copyTxHash}
+                    className="p-1 hover:text-white transition-colors"
+                    aria-label="Copiar Hash"
+                    title="Copiar Hash da Transação"
+                  >
+                    {copiedTx ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  </button>
+                  <a
+                    href={`https://etherscan.io/tx/${confirmedOrder.txHash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-1 hover:text-white transition-colors"
+                    aria-label="Abrir no Etherscan (Simulado)"
+                    title="Ver no Explorador de Blocos (Simulado)"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
               </div>
             </div>
 

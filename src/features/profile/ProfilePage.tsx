@@ -21,6 +21,7 @@ import {
   CheckCircle2,
   AlertCircle,
   ExternalLink,
+  Download,
 } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/Dialog'
 
@@ -35,6 +36,9 @@ export const ProfilePage: React.FC = () => {
   const setActiveTab = (tab: string) => {
     navigate({ to: '/profile', search: { tab } })
   }
+
+  // Selected receipt for detailed modal view
+  const [selectedReceipt, setSelectedReceipt] = useState<OrderReceipt | null>(null)
 
   // Profile Form States
   const [name, setName] = useState('')
@@ -561,15 +565,111 @@ export const ProfilePage: React.FC = () => {
 
                   <div className="pt-2 border-t border-border/40 flex justify-between items-center text-[11px] text-foreground-muted font-mono">
                     <span>TX: {truncateAddress(order.txHash, 10, 8)}</span>
-                    <span className="text-primary flex items-center gap-1 font-sans font-semibold">
+                    <button
+                      onClick={() => setSelectedReceipt(order)}
+                      className="text-primary hover:text-primary-hover flex items-center gap-1 font-sans font-semibold transition-colors"
+                    >
                       <span>Ver Recibo</span>
                       <ExternalLink className="w-3 h-3" />
-                    </span>
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
           )}
+
+          {/* Order Receipt Detail Dialog */}
+          <Dialog open={!!selectedReceipt} onOpenChange={(open) => !open && setSelectedReceipt(null)}>
+            <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+              {selectedReceipt && (
+                <div className="space-y-5 text-xs">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                      <span>Recibo Oficial do Pedido</span>
+                    </DialogTitle>
+                    <DialogDescription>
+                      Snapshot imutável do pedido registrado na blockchain Ethereum.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="p-4 rounded-xl border border-border bg-surface-secondary/40 space-y-3 font-mono text-[11px]">
+                    <div className="flex justify-between pb-2 border-b border-border/40">
+                      <span className="text-foreground-muted">ID do Pedido:</span>
+                      <span className="font-bold text-foreground">{selectedReceipt.orderId}</span>
+                    </div>
+                    <div className="flex justify-between pb-2 border-b border-border/40">
+                      <span className="text-foreground-muted">Data/Hora:</span>
+                      <span className="text-foreground">{formatDate(selectedReceipt.createdAt)}</span>
+                    </div>
+                    <div className="flex justify-between pb-2 border-b border-border/40">
+                      <span className="text-foreground-muted">Carteira:</span>
+                      <span className="text-foreground">{selectedReceipt.walletAddress}</span>
+                    </div>
+                    <div className="flex justify-between pb-2 border-b border-border/40">
+                      <span className="text-foreground-muted">Rede:</span>
+                      <span className="text-primary uppercase font-bold">{selectedReceipt.network}</span>
+                    </div>
+                    <div className="flex flex-col gap-1 pb-2 border-b border-border/40">
+                      <span className="text-foreground-muted">Hash da Transação:</span>
+                      <span className="text-primary break-all">{selectedReceipt.txHash}</span>
+                    </div>
+                  </div>
+
+                  {/* Items */}
+                  <div className="space-y-2">
+                    <span className="font-bold text-foreground uppercase tracking-wider text-[11px] block">
+                      Itens do Pedido ({selectedReceipt.items.length})
+                    </span>
+                    {selectedReceipt.items.map((it, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-surface border border-border">
+                        <div className="flex items-center gap-3">
+                          <img src={it.image} alt={it.name} className="w-10 h-10 rounded object-cover" />
+                          <div>
+                            <strong className="text-foreground text-xs block">{it.name}</strong>
+                            <span className="text-[11px] text-foreground-muted">Qtd: {it.quantity}</span>
+                          </div>
+                        </div>
+                        <div className="font-mono font-bold text-primary">{formatEth(it.lineTotal)}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Totals */}
+                  <div className="pt-3 border-t border-border space-y-1.5 font-mono text-xs">
+                    <div className="flex justify-between text-foreground-muted">
+                      <span>Subtotal</span>
+                      <span>{formatEth(selectedReceipt.subtotal)}</span>
+                    </div>
+                    {selectedReceipt.discount !== '0.0000' && (
+                      <div className="flex justify-between text-emerald-400">
+                        <span>Desconto</span>
+                        <span>- {formatEth(selectedReceipt.discount)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-foreground-muted">
+                      <span>Taxa de Gás</span>
+                      <span>{formatEth(selectedReceipt.gasFee)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-bold text-foreground pt-1.5 border-t border-border">
+                      <span>Total Pago</span>
+                      <span className="text-primary">{formatEth(selectedReceipt.total)}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button variant="outline" onClick={() => window.print()} className="flex-1 gap-1.5 text-xs">
+                      <Download className="w-4 h-4" />
+                      <span>Imprimir / Salvar PDF</span>
+                    </Button>
+                    <Button onClick={() => setSelectedReceipt(null)} className="flex-1 text-xs font-bold">
+                      Fechar
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       )}
 

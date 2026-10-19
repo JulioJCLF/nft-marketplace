@@ -286,7 +286,6 @@ class MockDatabase {
     }
     this.state.users.push(newUser)
     this.persist()
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _, ...clean } = newUser
     return clean
   }
@@ -300,7 +299,6 @@ class MockDatabase {
     if (data.avatar) user.avatar = data.avatar
 
     this.persist()
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _, ...clean } = user
     return clean
   }
