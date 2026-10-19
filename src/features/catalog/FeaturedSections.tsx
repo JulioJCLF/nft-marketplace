@@ -79,25 +79,25 @@ export const FeaturedSections: React.FC = () => {
               date: '12 de setembro  |  Leitura de 6 min',
               title: 'Como funciona a propriedade de NFTs',
               desc: 'Aprenda a colecionar, negociar e verificar ativos digitais.',
-              image: '/nfts/bored-ape-7090.svg',
+              image: '/nfts/figma/img5_8758.png',
             },
             {
               date: '13 de setembro  |  Leitura de 2 min',
               title: '10 artistas digitais para acompanhar',
               desc: 'Conheça criadores que moldam a cultura digital.',
-              image: '/nfts/bored-ape-8817.svg',
+              image: '/nfts/figma/img4_8459.png',
             },
             {
               date: '15 de setembro  |  Leitura de 3 min',
               title: 'Raridade, atributos e procedência',
               desc: 'Entenda raridade, procedência, direitos autorais e utilidade.',
-              image: '/nfts/cyber-kong-124.svg',
+              image: '/nfts/figma/img1_2986.png',
             },
             {
               date: '15 de setembro  |  Leitura de 2 min',
               title: 'Como proteger sua carteira',
               desc: 'Proteja sua carteira, seus ativos e sua identidade.',
-              image: '/nfts/golden-ape-4421.svg',
+              image: '/nfts/figma/img6_9df2.png',
             },
           ].map((item, idx) => (
             <div

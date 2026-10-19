@@ -553,7 +553,7 @@ class MockDatabase {
         nftId: qi.nftId,
         name: qi.name,
         collection: nft?.collection || 'Bored Ape Yacht Club',
-        image: nft?.image || '/nfts/bored-ape-7090.svg',
+        image: nft?.image || '/nfts/figma/img4_8459.png',
         quantity: qi.quantity,
         unitPrice: qi.unitPrice,
         lineTotal: qi.lineTotal,
