@@ -24,9 +24,9 @@ export const Footer: React.FC = () => {
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-foreground mb-1">Transações Seguras</h3>
+              <h3 className="font-bold text-sm text-foreground mb-1">Segurança da carteira</h3>
               <p className="text-foreground-muted leading-relaxed">
-                Idempotência criptográfica e simulação fiel da rede Ethereum com validação de assinatura.
+                Proteja sua carteira e colecione arte digital verificada com confiança.
               </p>
             </div>
           </div>
@@ -36,9 +36,9 @@ export const Footer: React.FC = () => {
               <Zap className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-foreground mb-1">Tempo Real Nativo</h3>
+              <h3 className="font-bold text-sm text-foreground mb-1">Criadores em destaque</h3>
               <p className="text-foreground-muted leading-relaxed">
-                Eventos via Socket.IO Client para atualizações imediatas de estoque e valores no carrinho.
+                Conheça artistas, estúdios e comunidades que moldam a cultura digital na rede.
               </p>
             </div>
           </div>
@@ -48,9 +48,9 @@ export const Footer: React.FC = () => {
               <Headphones className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-foreground mb-1">Precisão Financeira</h3>
+              <h3 className="font-bold text-sm text-foreground mb-1">Alertas de lançamentos</h3>
               <p className="text-foreground-muted leading-relaxed">
-                Cálculos em ETH processados via Decimal.js, eliminando desvios de ponto flutuante.
+                Receba calendários de cunhagem, novidades de listas de acesso e análises do mercado.
               </p>
             </div>
           </div>
@@ -69,17 +69,24 @@ export const Footer: React.FC = () => {
                   <path d="M6 13L16 20L26 13L26 17L16 26L6 17V13Z" fill="#E59A5A" />
                 </svg>
               </div>
-              <span className="font-extrabold text-base tracking-wider text-foreground">
-                NFT<span className="text-primary">VERSE</span>
+              <span className="font-extrabold text-lg tracking-wider text-foreground">
+                KURIO
               </span>
             </div>
             <p className="max-w-sm text-foreground-muted leading-relaxed">
-              Mercado descentralizado para colecionadores exigentes. Referência visual baseada no Figma original com fidelidade em 390px, 768px e 1440px.
+              Feito para colecionadores, criadores e cultura.
             </p>
+            <div className="text-[11px] text-foreground-muted space-y-0.5">
+              <p>contato@email.com</p>
+              <p>+55 11 4002 8922</p>
+            </div>
 
             {/* Newsletter form */}
             <div className="pt-2">
-              <p className="font-bold text-foreground text-xs mb-2">Receba novidades e drops exclusivos</p>
+              <p className="font-bold text-foreground text-xs mb-1">Antecipe-se ao próximo lançamento</p>
+              <p className="text-[11px] text-foreground-muted mb-2">
+                Receba lançamentos selecionados, histórias de criadores e novidades do mercado.
+              </p>
               {subscribed ? (
                 <div className="flex items-center gap-2 text-emerald-400 text-xs">
                   <CheckCircle2 className="w-4 h-4" />
@@ -89,14 +96,14 @@ export const Footer: React.FC = () => {
                 <form onSubmit={handleSubscribe} className="flex gap-2 max-w-sm">
                   <input
                     type="email"
-                    placeholder="Seu e-mail"
+                    placeholder="digite seu e-mail..."
                     value={newsletterEmail}
                     onChange={(e) => setNewsletterEmail(e.target.value)}
                     required
                     className="flex-1 h-9 rounded-md border border-border bg-surface px-3 text-xs text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                   <Button type="submit" size="sm" className="font-bold">
-                    Inscrever
+                    Enviar
                   </Button>
                 </form>
               )}
@@ -192,8 +199,11 @@ export const Footer: React.FC = () => {
 
         {/* Bottom Bar */}
         <div className="border-t border-border/60 mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-foreground-muted">
-          <p>© 2026 NFT Marketplace. Desafio Técnico Frontend — React + TypeScript + Cloudflare Pages.</p>
+          <p>© 2026 Kurio. Propriedade digital para todos.</p>
           <div className="flex items-center gap-4">
+            <span className="font-mono text-[10px] tracking-wider uppercase text-foreground-muted">
+              METAMASK • WALLETCONNECT • COINBASE
+            </span>
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface border border-border">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
               Deploy: Cloudflare Pages

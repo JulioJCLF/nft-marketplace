@@ -14,12 +14,12 @@ interface FiltersSidebarProps {
 }
 
 const CATEGORIES: Array<{ id: CategoryType; label: string; count?: number }> = [
-  { id: 'all', label: 'Todas as Categorias' },
-  { id: 'art', label: 'Arte Digital' },
-  { id: 'collectibles', label: 'Colecionáveis' },
-  { id: 'music', label: 'Música & Áudio' },
-  { id: 'metaverse', label: 'Metaverso' },
-  { id: 'gaming', label: 'Jogos Web3' },
+  { id: 'all', label: 'Todas as Coleções' },
+  { id: 'art', label: 'Arte Digital', count: 33 },
+  { id: 'collectibles', label: 'Colecionáveis', count: 23 },
+  { id: 'music', label: 'Música', count: 65 },
+  { id: 'metaverse', label: 'Arte 3D', count: 39 },
+  { id: 'gaming', label: 'Jogos Web3', count: 19 },
 ]
 
 export const FiltersSidebar: React.FC<FiltersSidebarProps> = ({
@@ -87,6 +87,7 @@ export const FiltersSidebar: React.FC<FiltersSidebarProps> = ({
               <button
                 key={cat.id}
                 onClick={() => onFilterChange({ category: cat.id, page: 1 })}
+                aria-label={cat.label}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-xs font-medium transition-colors text-left ${
                   isSelected
                     ? 'bg-primary text-primary-foreground font-bold shadow-sm'
@@ -94,6 +95,11 @@ export const FiltersSidebar: React.FC<FiltersSidebarProps> = ({
                 }`}
               >
                 <span>{cat.label}</span>
+                {cat.count !== undefined && (
+                  <span aria-hidden="true" className={`text-[11px] font-mono ${isSelected ? 'text-black font-bold' : 'text-foreground-muted'}`}>
+                    ({cat.count})
+                  </span>
+                )}
               </button>
             )
           })}

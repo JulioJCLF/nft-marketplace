@@ -22,7 +22,7 @@ export const HeroSection: React.FC = () => {
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/40 bg-primary/10 text-primary text-xs font-semibold">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Drop Exclusivo da Temporada</span>
+              <span>Bem-vindo à Kurio</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground leading-[1.1]">
@@ -30,13 +30,13 @@ export const HeroSection: React.FC = () => {
             </h1>
 
             <p className="text-base sm:text-lg text-foreground-muted max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-              O mercado definitivo para colecionadores e criadores de NFTs na rede Ethereum. Negocie obras autênticas com liquidação em tempo real, cupons dinâmicos e taxa zero de custódia.
+              Descubra NFTs selecionados de criadores emergentes e consagrados. Colecione arte digital rara, apoie artistas e tenha uma parte da cultura da internet.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
               <Link to="/" search={{ category: 'all' }}>
-                <Button size="lg" className="gap-2 font-bold w-full sm:w-auto">
-                  <span>Explorar Coleção</span>
+                <Button size="lg" className="gap-2 font-bold w-full sm:w-auto uppercase tracking-wide">
+                  <span>EXPLORAR</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>

@@ -38,8 +38,8 @@ export const Navbar: React.FC = () => {
             </svg>
           </div>
           <div className="flex flex-col">
-            <span className="font-extrabold text-lg tracking-wider text-foreground leading-tight">
-              NFT<span className="text-primary">VERSE</span>
+            <span className="font-extrabold text-xl tracking-wider text-foreground leading-tight">
+              KURIO
             </span>
             <span className="text-[10px] text-foreground-muted tracking-widest font-mono uppercase">
               Marketplace
@@ -53,28 +53,28 @@ export const Navbar: React.FC = () => {
             to="/"
             className="text-foreground hover:text-primary transition-colors data-[status=active]:text-primary"
           >
-            Explorar
+            Início
           </Link>
           <Link
             to="/"
-            search={{ category: 'collectibles' }}
+            search={{ category: 'all' }}
             className="text-foreground-muted hover:text-foreground transition-colors"
           >
-            Colecionáveis
+            Mercado
           </Link>
           <Link
             to="/"
             search={{ category: 'art' }}
             className="text-foreground-muted hover:text-foreground transition-colors"
           >
-            Arte Digital
+            Criadores
           </Link>
           <Link
             to="/docs"
             className="flex items-center gap-1.5 text-foreground-muted hover:text-primary transition-colors"
           >
             <BookOpen className="w-4 h-4 text-primary" />
-            <span>Documentação</span>
+            <span>Aprenda</span>
           </Link>
         </nav>
 

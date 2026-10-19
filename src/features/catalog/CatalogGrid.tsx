@@ -112,9 +112,9 @@ export const CatalogGrid: React.FC<CatalogGridProps> = ({ searchParams, onUpdate
             </form>
           </div>
 
-          {/* Top Control Bar */}
+          {/* Top Control Bar with Figma Tabs */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-6 border-b border-border">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               {/* Mobile Filter Drawer Trigger */}
               <button
                 onClick={() => setMobileFilterOpen(true)}
@@ -124,9 +124,33 @@ export const CatalogGrid: React.FC<CatalogGridProps> = ({ searchParams, onUpdate
                 <span>Filtros</span>
               </button>
 
-              <p className="text-xs sm:text-sm text-foreground-muted">
+              {/* View Tabs matching Figma */}
+              <div className="flex items-center gap-1.5 p-1 rounded-lg bg-surface border border-border">
+                {[
+                  { id: 'all', label: 'Todos os NFTs', sort: 'recent' },
+                  { id: 'new', label: 'Novos lançamentos', sort: 'recent' },
+                  { id: 'trending', label: 'Em alta', sort: 'popular' },
+                ].map((tab, idx) => {
+                  const isActive = (searchParams.sort || 'recent') === tab.sort && idx === ((searchParams.sort === 'popular') ? 2 : 0)
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => onUpdateParams({ sort: tab.sort as SortOption, page: 1 })}
+                      className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
+                        isActive
+                          ? 'bg-primary text-black shadow-sm'
+                          : 'text-foreground-muted hover:text-foreground'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  )
+                })}
+              </div>
+
+              <p className="hidden xl:block text-xs text-foreground-muted">
                 Exibindo <strong className="text-foreground">{startIdx} - {endIdx}</strong> de{' '}
-                <strong className="text-foreground">{total}</strong> obras digitais
+                <strong className="text-foreground">{total}</strong> obras
               </p>
             </div>
 
@@ -141,10 +165,10 @@ export const CatalogGrid: React.FC<CatalogGridProps> = ({ searchParams, onUpdate
                 onChange={(e) => onUpdateParams({ sort: e.target.value as SortOption, page: 1 })}
                 className="h-9 rounded-md border border-border bg-surface px-3 text-xs text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-primary"
               >
-                <option value="recent">Mais Recentes</option>
+                <option value="recent">Listados recentemente</option>
                 <option value="price_asc">Menor Preço (ETH)</option>
                 <option value="price_desc">Maior Preço (ETH)</option>
-                <option value="popular">Mais Populares</option>
+                <option value="popular">Em alta</option>
               </select>
             </div>
           </div>
