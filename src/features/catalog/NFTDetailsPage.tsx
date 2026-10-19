@@ -175,9 +175,28 @@ export const NFTDetailsPage: React.FC<NFTDetailsPageProps> = ({ nftId }) => {
 
       {/* Main Details Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-        {/* Left Column: Image Gallery */}
-        <div className="lg:col-span-6 space-y-4">
-          <div className="relative aspect-square rounded-2xl overflow-hidden border border-border bg-surface-secondary shadow-xl">
+        {/* Left Column: Image Gallery with Vertical Thumbnails on Desktop (Figma Frame 2) */}
+        <div className="lg:col-span-7 flex flex-col-reverse lg:flex-row gap-4 items-start">
+          {/* Vertical Thumbnails on Desktop */}
+          {galleryImages.length > 1 && (
+            <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible w-full lg:w-20 flex-shrink-0">
+              {galleryImages.map((imgUrl, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSelectedImage(imgUrl)}
+                  className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 transition-all flex-shrink-0 bg-surface-tertiary ${
+                    currentImage === imgUrl ? 'border-primary ring-2 ring-primary/40 scale-105' : 'border-border opacity-70 hover:opacity-100'
+                  }`}
+                  aria-label={`Visualizar miniatura ${i + 1}`}
+                >
+                  <img src={imgUrl} alt={`${nft.name} miniatura ${i + 1}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Main Large Image */}
+          <div className="relative flex-1 w-full aspect-square rounded-3xl overflow-hidden border border-border bg-surface-secondary shadow-2xl">
             <img
               src={currentImage}
               alt={nft.name}
@@ -202,27 +221,10 @@ export const NFTDetailsPage: React.FC<NFTDetailsPageProps> = ({ nftId }) => {
               <Heart className={`w-5 h-5 ${nft.isLiked ? 'fill-red-500' : ''}`} />
             </button>
           </div>
-
-          {/* Thumbnails Gallery */}
-          {galleryImages.length > 1 && (
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {galleryImages.map((imgUrl, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedImage(imgUrl)}
-                  className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 bg-surface-tertiary ${
-                    currentImage === imgUrl ? 'border-primary ring-2 ring-primary/30' : 'border-border opacity-70 hover:opacity-100'
-                  }`}
-                >
-                  <img src={imgUrl} alt={`${nft.name} miniatura ${i + 1}`} className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Right Column: Metadata & Purchase Box */}
-        <div className="lg:col-span-6 space-y-6">
+        <div className="lg:col-span-5 space-y-6">
           {/* Collection & Verification */}
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
@@ -243,18 +245,27 @@ export const NFTDetailsPage: React.FC<NFTDetailsPageProps> = ({ nftId }) => {
           {/* Title */}
           <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">{nft.name}</h1>
 
-          {/* Creator Information */}
-          <div className="flex items-center gap-3 p-3 rounded-xl border border-border bg-surface-secondary/40">
-            <img
-              src={nft.creator.avatar}
-              alt={nft.creator.name}
-              className="w-10 h-10 rounded-full bg-surface-tertiary border border-border"
-            />
-            <div className="flex-1 min-w-0">
-              <span className="text-[10px] text-foreground-muted uppercase block">Criado por</span>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-foreground truncate">{nft.creator.name}</span>
-                <span className="text-[10px] text-foreground-muted font-mono">({truncateAddress(nft.creator.address)})</span>
+          {/* Creator & Collection Double Chips (Figma Frame 2) */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center gap-3 p-3 rounded-2xl border border-border bg-surface-secondary/40">
+              <img
+                src={nft.creator.avatar}
+                alt={nft.creator.name}
+                className="w-10 h-10 rounded-full bg-surface-tertiary border border-border"
+              />
+              <div className="min-w-0">
+                <span className="text-[10px] text-foreground-muted uppercase font-bold block">Criador</span>
+                <span className="text-xs font-bold text-foreground block truncate">{nft.creator.name}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 rounded-2xl border border-border bg-surface-secondary/40">
+              <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-xs">
+                BAYC
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] text-foreground-muted uppercase font-bold block">Coleção</span>
+                <span className="text-xs font-bold text-foreground block truncate">{nft.collection}</span>
               </div>
             </div>
           </div>

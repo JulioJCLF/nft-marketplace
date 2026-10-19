@@ -17,6 +17,7 @@ import { CatalogGrid } from '@/features/catalog/CatalogGrid'
 import { FeaturedSections } from '@/features/catalog/FeaturedSections'
 import { NFTDetailsPage } from '@/features/catalog/NFTDetailsPage'
 import { CheckoutPage } from '@/features/checkout/CheckoutPage'
+import { CartPage } from '@/features/cart/CartPage'
 import { ProfilePage } from '@/features/profile/ProfilePage'
 import { DocsPage } from '@/docs/DocsPage'
 import { CatalogSearchParams, CategoryType, SortOption, StatusFilter } from '@/types'
@@ -114,14 +115,21 @@ const nftDetailsRoute = createRoute({
   },
 })
 
-// 4. Checkout Route
+// 4. Cart Route (Figma Frame 3)
+const cartRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/cart',
+  component: () => <CartPage />,
+})
+
+// 5. Checkout Route
 const checkoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/checkout',
   component: () => <CheckoutPage />,
 })
 
-// 5. Profile Route
+// 6. Profile Route
 const profileRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/profile',
@@ -133,7 +141,7 @@ const profileRoute = createRoute({
   component: () => <ProfilePage />,
 })
 
-// 6. Docs Route (Mandatory Public Hosted Documentation)
+// 7. Docs Route (Mandatory Public Hosted Documentation)
 const docsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/docs',
@@ -144,6 +152,7 @@ const docsRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   indexRoute,
   nftDetailsRoute,
+  cartRoute,
   checkoutRoute,
   profileRoute,
   docsRoute,

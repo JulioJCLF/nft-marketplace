@@ -22,11 +22,12 @@ import {
   AlertCircle,
   ExternalLink,
   Download,
+  LogOut,
 } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/Dialog'
 
 export const ProfilePage: React.FC = () => {
-  const { user, isAuthenticated, isLoading, setAuthModalOpen, setRedirectAfterAuth, refreshSession } = useAuth()
+  const { user, isAuthenticated, isLoading, setAuthModalOpen, setRedirectAfterAuth, refreshSession, logout } = useAuth()
   const navigate = useNavigate()
   const search = useSearch({ strict: false }) as { tab?: string }
   const queryClient = useQueryClient()
@@ -200,23 +201,8 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Header */}
-      <div className="border-b border-border pb-6 flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-4">
-          <img
-            src={user.avatar}
-            alt={user.name}
-            className="w-16 h-16 rounded-full bg-surface-secondary border-2 border-primary/50 object-cover"
-          />
-          <div>
-            <h1 className="text-2xl font-extrabold text-foreground">{user.name}</h1>
-            <p className="text-xs text-foreground-muted">{user.email}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs Navigation */}
-      <div className="flex border-b border-border overflow-x-auto">
+      {/* Mobile Horizontal Tabs (< lg) */}
+      <div className="lg:hidden flex border-b border-border overflow-x-auto pb-2 gap-2">
         {[
           { id: 'profile', label: 'Dados do Perfil', icon: UserIcon },
           { id: 'wallets', label: `Carteiras (${wallets.length})`, icon: WalletIcon },
@@ -229,18 +215,112 @@ export const ProfilePage: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 py-3 px-5 text-xs font-bold border-b-2 whitespace-nowrap transition-all ${
+              className={`flex items-center gap-2 py-2 px-3.5 text-xs font-bold rounded-lg whitespace-nowrap transition-all ${
                 isActive
-                  ? 'border-primary text-primary bg-primary/5'
-                  : 'border-transparent text-foreground-muted hover:text-foreground'
+                  ? 'bg-primary text-black font-extrabold shadow-sm'
+                  : 'bg-surface border border-border text-foreground-muted hover:text-foreground'
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-3.5 h-3.5" />
               <span>{tab.label}</span>
             </button>
           )
         })}
       </div>
+
+      {/* Main 2-Column Layout for Desktop (Figma Frames 8 & 9) */}
+      <div className="flex flex-col lg:flex-row gap-8 items-start">
+        {/* Left Sidebar (Desktop) */}
+        <aside className="w-full lg:w-72 shrink-0 space-y-6 hidden lg:block">
+          {/* User Card */}
+          <div className="p-6 rounded-2xl border border-border bg-surface text-center space-y-4 shadow-sm">
+            <div className="relative inline-block">
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="w-24 h-24 rounded-full mx-auto bg-surface-secondary border-2 border-primary/60 object-cover shadow-lg"
+              />
+              <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-surface" title="Online" />
+            </div>
+
+            <div>
+              <h2 className="text-lg font-extrabold text-foreground">{user.name}</h2>
+              <p className="text-xs text-foreground-muted truncate">{user.email}</p>
+              <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-[11px] font-bold">
+                <CheckCircle2 className="w-3 h-3" />
+                <span>Colecionador Verificado</span>
+              </div>
+            </div>
+
+            {/* Account Quick Stats */}
+            <div className="pt-4 border-t border-border grid grid-cols-2 gap-2 text-center text-xs">
+              <div className="p-2 rounded-lg bg-surface-secondary/50">
+                <span className="text-[10px] text-foreground-muted block">Pedidos</span>
+                <span className="font-mono font-bold text-foreground">{orders.length}</span>
+              </div>
+              <div className="p-2 rounded-lg bg-surface-secondary/50">
+                <span className="text-[10px] text-foreground-muted block">Favoritos</span>
+                <span className="font-mono font-bold text-primary">{favorites.length}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Vertical Navigation Menu */}
+          <nav className="p-3 rounded-2xl border border-border bg-surface shadow-sm space-y-1">
+            {[
+              { id: 'profile', label: 'Dados do Perfil', icon: UserIcon },
+              { id: 'wallets', label: 'Carteiras Web3', count: wallets.length, icon: WalletIcon },
+              { id: 'orders', label: 'Histórico de Pedidos', count: orders.length, icon: Package },
+              { id: 'favorites', label: 'Favoritos Salvos', count: favorites.length, icon: Heart },
+            ].map((item) => {
+              const Icon = item.icon
+              const isActive = activeTab === item.id
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all ${
+                    isActive
+                      ? 'bg-primary text-black shadow'
+                      : 'text-foreground-muted hover:text-foreground hover:bg-surface-secondary'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Icon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.count !== undefined && (
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${
+                        isActive
+                          ? 'bg-black/20 text-black font-extrabold'
+                          : 'bg-surface-secondary border border-border text-foreground-muted'
+                      }`}
+                    >
+                      {item.count}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+
+            <div className="pt-2 mt-2 border-t border-border">
+              <button
+                onClick={() => {
+                  logout()
+                  navigate({ to: '/' })
+                }}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Encerrar Sessão</span>
+              </button>
+            </div>
+          </nav>
+        </aside>
+
+        {/* Right Main Content Area */}
+        <div className="flex-1 min-w-0 w-full space-y-6">
 
       {/* Tab: Profile Data & Password */}
       {activeTab === 'profile' && (
@@ -692,6 +772,8 @@ export const ProfilePage: React.FC = () => {
           )}
         </div>
       )}
+        </div>
+      </div>
     </div>
   )
 }

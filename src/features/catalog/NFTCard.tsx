@@ -113,9 +113,9 @@ export const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
   }
 
   return (
-    <article className="group relative rounded-xl border border-border bg-card hover:border-primary/60 transition-all duration-300 flex flex-col overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1">
+    <article className="group relative rounded-2xl border border-border bg-surface hover:border-primary/60 transition-all duration-300 flex flex-col p-3.5 shadow-sm hover:shadow-xl hover:-translate-y-1">
       {/* Image Container with zoom */}
-      <Link to="/nft/$nftId" params={{ nftId: nft.id }} className="block relative aspect-square overflow-hidden bg-surface-secondary">
+      <Link to="/nft/$nftId" params={{ nftId: nft.id }} className="block relative aspect-square overflow-hidden rounded-xl bg-surface-secondary">
         <img
           src={nft.image}
           alt={nft.name}
@@ -126,18 +126,18 @@ export const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
         {/* Favorite Heart Button */}
         <button
           onClick={handleToggleFavorite}
-          className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all ${
+          className={`absolute top-2.5 right-2.5 p-2 rounded-full backdrop-blur-md transition-all ${
             nft.isLiked
               ? 'bg-red-500/20 text-red-500 border border-red-500/40'
               : 'bg-black/40 text-foreground-muted hover:text-white border border-white/10'
           }`}
           aria-label={nft.isLiked ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
         >
-          <Heart className={`w-4 h-4 ${nft.isLiked ? 'fill-red-500' : ''}`} />
+          <Heart className={`w-3.5 h-3.5 ${nft.isLiked ? 'fill-red-500' : ''}`} />
         </button>
 
         {/* Edition / Sold Out Badge */}
-        <div className="absolute bottom-3 left-3 flex gap-1.5">
+        <div className="absolute bottom-2.5 left-2.5 flex gap-1.5">
           {nft.isSoldOut || nft.availableSupply <= 0 ? (
             <Badge variant="danger" className="font-bold uppercase tracking-wider text-[10px]">
               Esgotado
@@ -151,7 +151,7 @@ export const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
       </Link>
 
       {/* Card Content */}
-      <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+      <div className="pt-3 flex-1 flex flex-col justify-between space-y-2.5">
         {/* Creator Info */}
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-1.5 text-foreground-muted truncate">

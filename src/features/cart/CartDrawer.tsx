@@ -237,11 +237,23 @@ export const CartDrawer: React.FC = () => {
                 </div>
               </div>
 
-              {/* Checkout CTA */}
-              <Button onClick={handleCheckout} className="w-full gap-2 font-bold" size="lg">
-                <span>Finalizar Compra</span>
-                <ArrowRight className="w-4 h-4" />
-              </Button>
+              {/* Checkout & View Cart CTAs */}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsCartDrawerOpen(false)
+                    navigate({ to: '/cart' })
+                  }}
+                  className="flex-1 font-bold text-xs"
+                >
+                  Ver Carrinho Completo
+                </Button>
+                <Button onClick={handleCheckout} className="flex-1 gap-2 font-bold" size="default">
+                  <span>Finalizar Compra</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           )}
         </div>
