@@ -77,6 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(null)
       setUser(null)
       clearPrivateCache()
+      setRedirectAfterAuth(window.location.pathname)
       setAuthModalMode('login')
       setAuthModalOpen(true)
     }

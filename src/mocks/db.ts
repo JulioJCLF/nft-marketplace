@@ -593,11 +593,23 @@ class MockDatabase {
       payloadHash,
     }
 
-    // Clear bought items from user cart only upon confirmed success
+    // Clear bought items and exact quantities from user cart only upon confirmed success
     if (newOrder.status === 'confirmed') {
       const currentCart = this.state.carts[userId] || []
-      const boughtIds = new Set(payload.items.map((i) => i.nftId))
-      this.state.carts[userId] = currentCart.filter((i) => !boughtIds.has(i.nftId))
+      const updatedCart: CartItem[] = []
+
+      for (const cartItem of currentCart) {
+        const bought = payload.items.find((i) => i.nftId === cartItem.nftId)
+        if (bought) {
+          const remainingQty = cartItem.quantity - bought.quantity
+          if (remainingQty > 0) {
+            updatedCart.push({ ...cartItem, quantity: remainingQty })
+          }
+        } else {
+          updatedCart.push(cartItem)
+        }
+      }
+      this.state.carts[userId] = updatedCart
     }
 
     this.persist()

@@ -1,5 +1,6 @@
 import React, { useState, useId, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { useCart } from '@/features/cart/CartContext'
 import { useAuth } from '@/features/auth/AuthContext'
 import { useRealtime } from '@/realtime/RealtimeContext'
@@ -38,6 +39,7 @@ const NETWORKS: Array<{ id: NetworkId; name: string; chainId: number }> = [
 
 export const CheckoutPage: React.FC = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { user, isAuthenticated, isLoading, setAuthModalOpen, setRedirectAfterAuth } = useAuth()
   const { items, subtotalEth, discountEth, gasFeeEth, totalEth, couponCode, quoteData, fetchQuote } = useCart()
   const { priceAlerts, clearAllPriceAlerts } = useRealtime()
@@ -129,6 +131,12 @@ export const CheckoutPage: React.FC = () => {
       // Mandatory check: Never confirm without success status from simulated API
       if (order && (order.status === 'confirmed' || response.status === 200 || response.status === 201)) {
         setConfirmedOrder(order)
+        // Invalidate cart, quote, orders and catalog caches to reflect purchased quantities immediately
+        queryClient.invalidateQueries({ queryKey: ['cart'] })
+        queryClient.invalidateQueries({ queryKey: ['quote'] })
+        queryClient.invalidateQueries({ queryKey: ['orders'] })
+        queryClient.invalidateQueries({ queryKey: ['nfts'] })
+
         // Fire celebration confetti
         try {
           confetti({
