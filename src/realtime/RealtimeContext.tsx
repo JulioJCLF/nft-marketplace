@@ -14,10 +14,20 @@ export interface PriceAlert {
   timestamp: number
 }
 
+export interface RealtimeLogEvent {
+  id: string
+  type: 'nft.updated' | 'order.updated'
+  title: string
+  detail: string
+  version: number
+  timestamp: string
+}
+
 interface RealtimeContextValue {
   isConnected: boolean
   lastEvent: NFTUpdatedEvent | OrderUpdatedEvent | null
   priceAlerts: PriceAlert[]
+  eventsHistory: RealtimeLogEvent[]
   dismissPriceAlert: (nftId: string) => void
   clearAllPriceAlerts: () => void
   reconcileWithServer: () => Promise<void>
@@ -30,6 +40,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isConnected, setIsConnected] = useState(false)
   const [lastEvent, setLastEvent] = useState<NFTUpdatedEvent | OrderUpdatedEvent | null>(null)
   const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([])
+  const [eventsHistory, setEventsHistory] = useState<RealtimeLogEvent[]>([])
 
   // Tracking processed event IDs to prevent duplicate processing
   const processedEventIdsRef = useRef<Set<string>>(new Set())
@@ -142,6 +153,18 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Invalidate cart & quote so any price adjustments propagate to checkout
       queryClient.invalidateQueries({ queryKey: ['cart'] })
       queryClient.invalidateQueries({ queryKey: ['quote'] })
+
+      setEventsHistory((prev) => [
+        {
+          id: event.id,
+          type: 'nft.updated',
+          title: `NFT Atualizado: ${event.nftId}`,
+          detail: `Preço: ${event.price} ETH | Estoque: ${event.availableSupply} (v${event.version})`,
+          version: event.version,
+          timestamp: new Date().toLocaleTimeString(),
+        },
+        ...prev.slice(0, 19),
+      ])
     },
     [queryClient]
   )
@@ -165,6 +188,18 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Invalidate order queries
       queryClient.invalidateQueries({ queryKey: ['order', event.orderId] })
       queryClient.invalidateQueries({ queryKey: ['orders'] })
+
+      setEventsHistory((prev) => [
+        {
+          id: event.id,
+          type: 'order.updated',
+          title: `Pedido Atualizado: #${event.orderId.slice(0, 8)}`,
+          detail: `Status: ${event.status} (v${event.version})`,
+          version: event.version,
+          timestamp: new Date().toLocaleTimeString(),
+        },
+        ...prev.slice(0, 19),
+      ])
     },
     [queryClient]
   )
@@ -238,6 +273,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         isConnected,
         lastEvent,
         priceAlerts,
+        eventsHistory,
         dismissPriceAlert,
         clearAllPriceAlerts,
         reconcileWithServer,

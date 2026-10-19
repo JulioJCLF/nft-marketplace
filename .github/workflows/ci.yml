@@ -1,0 +1,78 @@
+name: CI/CD Pipeline & Quality Assurance
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    name: Typecheck, Build & E2E Testing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck & Production Build
+        run: npm run build
+
+      - name: Install Playwright Browsers & OS Dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright E2E Tests
+        run: npx playwright test
+
+      - name: Run Playwright Visual Regression Tests
+        run: npm run test:visual
+
+      - name: Upload Test Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-reports
+          path: |
+            playwright-report/
+            playwright-visual-report/
+            lighthouse-reports/
+          retention-days: 14
+
+  deploy:
+    name: Cloudflare Pages Deployment
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build static assets
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: nft-marketplace
+          directory: dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
