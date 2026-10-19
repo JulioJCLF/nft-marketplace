@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGrad_bored-ape-8817" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#C8D5CE" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#18120E" stop-opacity="0.3"/>
+    </radialGradient>
+    <filter id="shadow_bored-ape-8817" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="500" height="500" fill="#C8D5CE"/>
+  <rect width="500" height="500" fill="url(#bgGrad_bored-ape-8817)"/>
+
+  <!-- Torso & Clothing -->
+  <g id="body">
+    <!-- Shoulders -->
+    <path d="M80 500 C80 400 140 370 250 370 C360 370 420 400 420 500 Z" fill="#58427C" stroke="#18120E" stroke-width="6" filter="url(#shadow_bored-ape-8817)"/>
+    <!-- Collar / Trim -->
+    <path d="M180 370 L250 440 L320 370 L280 370 L250 410 L220 370 Z" fill="#453460" stroke="#18120E" stroke-width="4"/>
+    <!-- Sleeves Trim -->
+    <path d="M80 470 Q130 460 160 500" stroke="#453460" stroke-width="12" stroke-linecap="round" fill="none"/>
+    <path d="M420 470 Q370 460 340 500" stroke="#453460" stroke-width="12" stroke-linecap="round" fill="none"/>
+    
+  </g>
+
+  <!-- Neck -->
+  <rect x="215" y="320" width="70" height="70" fill="#54463A" stroke="#18120E" stroke-width="5"/>
+
+  <!-- Ears -->
+  <circle cx="120" cy="250" r="38" fill="#54463A" stroke="#18120E" stroke-width="5"/>
+  <circle cx="122" cy="250" r="24" fill="#D1B48C" stroke="#18120E" stroke-width="3"/>
+  <circle cx="380" cy="250" r="38" fill="#54463A" stroke="#18120E" stroke-width="5"/>
+  <circle cx="378" cy="250" r="24" fill="#D1B48C" stroke="#18120E" stroke-width="3"/>
+
+  <!-- Head Base -->
+  <path d="M140 230 C130 140 370 140 360 230 C360 300 320 330 250 330 C180 330 140 300 140 230 Z" fill="#54463A" stroke="#18120E" stroke-width="6"/>
+
+  <!-- Muzzle / Mouth Area -->
+  <ellipse cx="250" cy="290" rx="85" ry="60" fill="#D1B48C" stroke="#18120E" stroke-width="5"/>
+  <path d="M235 255 Q250 250 265 255" stroke="#BA9E77" stroke-width="4" fill="none"/>
+  <!-- Nostrils -->
+  <ellipse cx="238" cy="265" rx="6" ry="8" fill="#4A2E1B"/>
+  <ellipse cx="262" cy="265" rx="6" ry="8" fill="#4A2E1B"/>
+
+  <!-- Mouth -->
+  
+        <path d="M180 315 Q250 360 320 315 Z" fill="#FFFFFF" stroke="#4A2E1B" stroke-width="5"/>
+        <line x1="215" y1="320" x2="215" y2="340" stroke="#DDD" stroke-width="2"/>
+        <line x1="250" y1="320" x2="250" y2="345" stroke="#DDD" stroke-width="2"/>
+        <line x1="285" y1="320" x2="285" y2="340" stroke="#DDD" stroke-width="2"/>
+        
+
+  <!-- Eyes & Eyebrows -->
+  <!-- Brow shadow -->
+  <path d="M165 195 Q250 210 335 195" stroke="#302015" stroke-width="8" stroke-linecap="round" fill="none"/>
+  
+        <ellipse cx="195" cy="225" rx="18" ry="14" fill="#FFFFFF" stroke="#333" stroke-width="3"/>
+        <ellipse cx="305" cy="225" rx="18" ry="14" fill="#FFFFFF" stroke="#333" stroke-width="3"/>
+        <circle cx="195" cy="225" r="9" fill="#2C1810"/>
+        <circle cx="305" cy="225" r="9" fill="#2C1810"/>
+        <circle cx="198" cy="221" r="3" fill="#FFFFFF"/>
+        <circle cx="308" cy="221" r="3" fill="#FFFFFF"/>
+        
+
+  <!-- Headwear -->
+  
+        <path d="M110 160 C110 120 150 90 250 90 C350 90 390 120 390 160 Z" fill="#6B7A68" stroke="#4A5548" stroke-width="4"/>
+        <path d="M90 160 C90 150 140 145 250 145 C360 145 410 150 410 160 C410 175 360 180 250 180 C140 180 90 175 90 160 Z" fill="#5A6858" stroke="#3D473B" stroke-width="3"/>
+        
+
+  <!-- Outer frame border subtle -->
+  <rect x="0" y="0" width="500" height="500" fill="none" stroke="#18120E" stroke-width="3"/>
+</svg>

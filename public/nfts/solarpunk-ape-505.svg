@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGrad_solarpunk-ape-505" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#DFD6C8" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#18120E" stop-opacity="0.3"/>
+    </radialGradient>
+    <filter id="shadow_solarpunk-ape-505" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="500" height="500" fill="#DFD6C8"/>
+  <rect width="500" height="500" fill="url(#bgGrad_solarpunk-ape-505)"/>
+
+  <!-- Torso & Clothing -->
+  <g id="body">
+    <!-- Shoulders -->
+    <path d="M80 500 C80 400 140 370 250 370 C360 370 420 400 420 500 Z" fill="#E06D28" stroke="#18120E" stroke-width="6" filter="url(#shadow_solarpunk-ape-505)"/>
+    <!-- Collar / Trim -->
+    <path d="M180 370 L250 440 L320 370 L280 370 L250 410 L220 370 Z" fill="#2B2B2B" stroke="#18120E" stroke-width="4"/>
+    <!-- Sleeves Trim -->
+    <path d="M80 470 Q130 460 160 500" stroke="#2B2B2B" stroke-width="12" stroke-linecap="round" fill="none"/>
+    <path d="M420 470 Q370 460 340 500" stroke="#2B2B2B" stroke-width="12" stroke-linecap="round" fill="none"/>
+    
+  </g>
+
+  <!-- Neck -->
+  <rect x="215" y="320" width="70" height="70" fill="#805A3B" stroke="#18120E" stroke-width="5"/>
+
+  <!-- Ears -->
+  <circle cx="120" cy="250" r="38" fill="#805A3B" stroke="#18120E" stroke-width="5"/>
+  <circle cx="122" cy="250" r="24" fill="#D1B48C" stroke="#18120E" stroke-width="3"/>
+  <circle cx="380" cy="250" r="38" fill="#805A3B" stroke="#18120E" stroke-width="5"/>
+  <circle cx="378" cy="250" r="24" fill="#D1B48C" stroke="#18120E" stroke-width="3"/>
+
+  <!-- Head Base -->
+  <path d="M140 230 C130 140 370 140 360 230 C360 300 320 330 250 330 C180 330 140 300 140 230 Z" fill="#805A3B" stroke="#18120E" stroke-width="6"/>
+
+  <!-- Muzzle / Mouth Area -->
+  <ellipse cx="250" cy="290" rx="85" ry="60" fill="#D1B48C" stroke="#18120E" stroke-width="5"/>
+  <path d="M235 255 Q250 250 265 255" stroke="#BA9E77" stroke-width="4" fill="none"/>
+  <!-- Nostrils -->
+  <ellipse cx="238" cy="265" rx="6" ry="8" fill="#4A2E1B"/>
+  <ellipse cx="262" cy="265" rx="6" ry="8" fill="#4A2E1B"/>
+
+  <!-- Mouth -->
+  <path d="M195 325 Q250 335 305 325" stroke="#4A2E1B" stroke-width="6" stroke-linecap="round" fill="none"/>
+
+  <!-- Eyes & Eyebrows -->
+  <!-- Brow shadow -->
+  <path d="M165 195 Q250 210 335 195" stroke="#302015" stroke-width="8" stroke-linecap="round" fill="none"/>
+  
+        <rect x="160" y="205" width="75" height="45" rx="8" fill="#FF0055" stroke="#222" stroke-width="4"/>
+        <rect x="265" y="205" width="75" height="45" rx="8" fill="#00E5FF" stroke="#222" stroke-width="4"/>
+        <line x1="235" y1="225" x2="265" y2="225" stroke="#222" stroke-width="6"/>
+        
+
+  <!-- Headwear -->
+  
+
+  <!-- Outer frame border subtle -->
+  <rect x="0" y="0" width="500" height="500" fill="none" stroke="#18120E" stroke-width="3"/>
+</svg>
