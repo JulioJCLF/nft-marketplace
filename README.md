@@ -56,3 +56,11 @@ Os detalhes dos testes, resultados Lighthouse e limitações conhecidas estão e
 - Fallback SPA: `public/_redirects`
 
 A [demonstração pública](https://nft-marketplace-6b1.pages.dev) está publicada no Cloudflare Pages com suporte a acesso direto nas rotas SPA e mocks MSW ativos.
+
+## Ajustes de design e usabilidade
+
+Fiz algumas melhorias pontuais no layout para deixar a navegação mais agradável e intuitiva:
+
+- **Espaçamento dos cards**: Ajustei o padding dos cards de NFT para dar mais respiro ao conteúdo, deixando a tela com um visual mais clean e fácil de visualizar.
+- **Botões de compartilhar abaixo do preço**: Mudei os botões de compartilhamento para ficarem logo abaixo do valor do NFT, separando melhor o que é preço e compra do que são ações sociais da página.
+- **Aba "Aprenda" (`/docs`)**: Criei uma aba dedicada para explicar a parte técnica do projeto (arquitetura, mocks com MSW, tempo real com Socket.IO e decisões de código), deixando tudo documentado sem misturar com a navegação principal da loja.
