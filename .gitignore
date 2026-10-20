@@ -42,3 +42,4 @@ dist-ssr
 
 # TS build info
 *.tsbuildinfo
+docs/ARQUITETURA_TECNICA.md
