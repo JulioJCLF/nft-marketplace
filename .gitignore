@@ -33,8 +33,8 @@ dist-ssr
 
 # Local reference files and generated Lighthouse runs
 /design/
-/docs/second-brain/screenshots/home-mobile-reference.png
-/docs/second-brain/evidence/lighthouse/
+/docs/validation/screenshots/home-mobile-reference.png
+/docs/validation/evidence/lighthouse/
 /lighthouse-reports/*.html
 /lighthouse-reports/*.json
 /lighthouse-reports/*-followup-*/

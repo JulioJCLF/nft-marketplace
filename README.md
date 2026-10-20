@@ -49,7 +49,7 @@ React, TypeScript, Vite, TanStack Router/Query, Tailwind CSS, Radix UI, Decimal.
 
 ## Validação e publicação
 
-Os detalhes dos testes, resultados Lighthouse e limitações conhecidas estão em [`docs/second-brain/VALIDATION.md`](docs/second-brain/VALIDATION.md). A configuração do Cloudflare Pages está em [`docs/second-brain/DEPLOYMENT.md`](docs/second-brain/DEPLOYMENT.md).
+Os detalhes dos testes, resultados Lighthouse e limitações conhecidas estão em [`docs/validation/VALIDATION.md`](docs/validation/VALIDATION.md). A configuração do Cloudflare Pages está em [`docs/validation/DEPLOYMENT.md`](docs/validation/DEPLOYMENT.md).
 
 - Build: `npm run build`
 - Diretório de saída: `dist`
