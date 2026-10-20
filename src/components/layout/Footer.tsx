@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ShieldCheck, Zap, Headphones, CheckCircle2 } from 'lucide-react'
+import { CheckCircle2 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/Button'
 
@@ -17,11 +17,11 @@ export const Footer: React.FC = () => {
   return (
     <footer className="border-t border-border bg-surface/50 text-foreground-muted text-xs">
       {/* Features Bar */}
-      <div className="border-b border-border/80 bg-surface-secondary/40 py-10 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="border-b border-border/80 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1264px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 bg-surface p-5 lg:px-8">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary flex-shrink-0">
-              <ShieldCheck className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-background font-bold flex-shrink-0">
+              W
             </div>
             <div>
               <h3 className="font-bold text-sm text-foreground mb-1">Segurança da carteira</h3>
@@ -32,8 +32,8 @@ export const Footer: React.FC = () => {
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary flex-shrink-0">
-              <Zap className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-background font-bold flex-shrink-0">
+              C
             </div>
             <div>
               <h3 className="font-bold text-sm text-foreground mb-1">Criadores em destaque</h3>
@@ -44,8 +44,8 @@ export const Footer: React.FC = () => {
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary flex-shrink-0">
-              <Headphones className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-background font-bold flex-shrink-0">
+              D
             </div>
             <div>
               <h3 className="font-bold text-sm text-foreground mb-1">Alertas de lançamentos</h3>
@@ -54,65 +54,35 @@ export const Footer: React.FC = () => {
               </p>
             </div>
           </div>
+          <div>
+            <h3 className="font-bold text-sm text-foreground mb-1">Antecipe-se ao próximo lançamento</h3>
+            <p className="text-foreground-muted leading-relaxed mb-2">Receba lançamentos selecionados, histórias de criadores e novidades do mercado.</p>
+            {subscribed ? (
+              <div className="flex items-center gap-2 text-emerald-400 text-xs"><CheckCircle2 className="w-4 h-4" /><span>Inscrição realizada com sucesso!</span></div>
+            ) : (
+              <form onSubmit={handleSubscribe} className="flex gap-1.5">
+                <input type="email" placeholder="digite seu e-mail..." value={newsletterEmail} onChange={(e) => setNewsletterEmail(e.target.value)} required className="min-w-0 flex-1 h-8 rounded border border-border bg-surface px-2 text-[10px] text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-primary" />
+                <Button type="submit" size="sm" className="h-8 px-2 text-[10px] font-bold">Enviar</Button>
+              </form>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Main Footer Links & Newsletter */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+      <div className="max-w-[1264px] mx-auto px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand info */}
-          <div className="md:col-span-2 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-surface border border-border flex items-center justify-center text-primary">
-                <svg viewBox="0 0 32 32" className="w-5 h-5 fill-none">
-                  <path d="M16 4L26 11L16 18L6 11L16 4Z" fill="#D08848" />
-                  <path d="M6 13L16 20L26 13L26 17L16 26L6 17V13Z" fill="#E59A5A" />
-                </svg>
-              </div>
-              <span className="font-extrabold text-lg tracking-wider text-foreground">
-                KURIO
-              </span>
-            </div>
-            <p className="max-w-sm text-foreground-muted leading-relaxed">
-              Feito para colecionadores, criadores e cultura.
-            </p>
-            <div className="text-[11px] text-foreground-muted space-y-0.5">
-              <p>contato@email.com</p>
-              <p>+55 11 4002 8922</p>
-            </div>
-
-            {/* Newsletter form */}
-            <div className="pt-2">
-              <p className="font-bold text-foreground text-xs mb-1">Antecipe-se ao próximo lançamento</p>
-              <p className="text-[11px] text-foreground-muted mb-2">
-                Receba lançamentos selecionados, histórias de criadores e novidades do mercado.
-              </p>
-              {subscribed ? (
-                <div className="flex items-center gap-2 text-emerald-400 text-xs">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Inscrição realizada com sucesso!</span>
-                </div>
-              ) : (
-                <form onSubmit={handleSubscribe} className="flex gap-2 max-w-sm">
-                  <input
-                    type="email"
-                    placeholder="digite seu e-mail..."
-                    value={newsletterEmail}
-                    onChange={(e) => setNewsletterEmail(e.target.value)}
-                    required
-                    className="flex-1 h-9 rounded-md border border-border bg-surface px-3 text-xs text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                  <Button type="submit" size="sm" className="font-bold">
-                    Enviar
-                  </Button>
-                </form>
-              )}
-            </div>
+          <div className="sm:col-span-2 lg:col-span-4 grid grid-cols-2 sm:grid-cols-4 gap-4 items-center border-b border-border bg-[#3A2414] px-4 py-3 text-[11px]">
+            <span className="font-bold tracking-widest text-foreground">KURIO</span>
+            <span>Feito para colecionadores, criadores e cultura</span>
+            <span>contato@email.com</span>
+            <span>+55 11 4002 8922</span>
           </div>
 
           {/* Links Column 1 */}
           <div className="space-y-3">
-            <h4 className="font-bold text-foreground uppercase tracking-wider text-[11px]">Marketplace</h4>
+            <h4 className="font-bold text-foreground tracking-wider text-[11px]">Coleções</h4>
             <ul className="space-y-2">
               <li>
                 <Link to="/" className="hover:text-foreground transition-colors">
@@ -131,7 +101,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <Link to="/" search={{ category: 'music' }} className="hover:text-foreground transition-colors">
-                  Música & Áudio
+                  Música
                 </Link>
               </li>
             </ul>
@@ -139,7 +109,7 @@ export const Footer: React.FC = () => {
 
           {/* Links Column 2 */}
           <div className="space-y-3">
-            <h4 className="font-bold text-foreground uppercase tracking-wider text-[11px]">Minha Conta</h4>
+            <h4 className="font-bold text-foreground tracking-wider text-[11px]">Meu perfil</h4>
             <ul className="space-y-2">
               <li>
                 <Link to="/profile" className="hover:text-foreground transition-colors">
@@ -166,7 +136,7 @@ export const Footer: React.FC = () => {
 
           {/* Links Column 3 */}
           <div className="space-y-3">
-            <h4 className="font-bold text-foreground uppercase tracking-wider text-[11px]">Documentação</h4>
+            <h4 className="font-bold text-foreground tracking-wider text-[11px]">Central de ajuda</h4>
             <ul className="space-y-2">
               <li>
                 <Link to="/docs" className="text-primary hover:underline transition-colors font-medium">
@@ -195,15 +165,16 @@ export const Footer: React.FC = () => {
               </li>
             </ul>
           </div>
+          <div className="space-y-3">
+            <h4 className="font-bold text-foreground tracking-wider text-[11px]">Carteiras compatíveis</h4>
+            <p className="font-mono text-[10px] uppercase leading-6">MetaMask · WalletConnect · Coinbase</p>
+          </div>
         </div>
 
         {/* Bottom Bar */}
         <div className="border-t border-border/60 mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-foreground-muted">
           <p>© 2026 Kurio. Propriedade digital para todos.</p>
           <div className="flex items-center gap-4">
-            <span className="font-mono text-[10px] tracking-wider uppercase text-foreground-muted">
-              METAMASK • WALLETCONNECT • COINBASE
-            </span>
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface border border-border">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
               Deploy: Cloudflare Pages

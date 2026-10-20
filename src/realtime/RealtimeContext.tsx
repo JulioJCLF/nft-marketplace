@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { socket } from './socket'
-import { NFTUpdatedEvent, OrderUpdatedEvent, NFT, CatalogResponse } from '@/types'
-import { REALTIME_EVENT_BUS } from '@/mocks/socketBinding'
+import { useAuth } from '@/features/auth/AuthContext'
+import { NFTUpdatedEvent, OrderUpdatedEvent, NFT, CatalogResponse, CartItem } from '@/types'
 
 export interface PriceAlert {
   nftId: string
@@ -37,6 +36,7 @@ const RealtimeContext = createContext<RealtimeContextValue | null>(null)
 
 export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const queryClient = useQueryClient()
+  const { user } = useAuth()
   const [isConnected, setIsConnected] = useState(false)
   const [lastEvent, setLastEvent] = useState<NFTUpdatedEvent | OrderUpdatedEvent | null>(null)
   const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([])
@@ -60,7 +60,40 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const handleNFTUpdated = useCallback(
     (event: NFTUpdatedEvent) => {
-      if (!event || !event.nftId || !event.id) return
+      if (!event || !event.nftId || !event.id || !Number.isFinite(event.version)) return
+
+      const entityKey = `nft:${event.nftId}`
+      const currentVersion = entityVersionsRef.current.get(entityKey) || 0
+      if (event.version <= currentVersion) return
+
+      let nftName = event.nftId
+      let oldPrice: string | undefined
+      const detailBeforeUpdate = queryClient.getQueryData<NFT>(['nft', event.nftId])
+      if (detailBeforeUpdate) {
+        nftName = detailBeforeUpdate.name
+        oldPrice = detailBeforeUpdate.price
+      } else {
+        const catalogEntries = queryClient.getQueriesData<CatalogResponse>({ queryKey: ['nfts'] })
+        for (const [, cat] of catalogEntries) {
+          const match = cat?.items?.find((i) => i.id === event.nftId)
+          if (match) {
+            nftName = match.name
+            oldPrice = match.price
+            break
+          }
+        }
+      }
+      if (oldPrice === undefined) {
+        const cartEntries = queryClient.getQueriesData<{ items: CartItem[] }>({ queryKey: ['cart'] })
+        for (const [, cart] of cartEntries) {
+          const match = cart?.items?.find((item) => item.nftId === event.nftId)
+          if (match) {
+            nftName = match.nft.name
+            oldPrice = match.nft.price
+            break
+          }
+        }
+      }
 
       // 1. Duplicate event check
       if (processedEventIdsRef.current.has(event.id)) {
@@ -70,14 +103,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       processedEventIdsRef.current.add(event.id)
 
       // 2. Monotonic version check
-      const currentVersion = entityVersionsRef.current.get(event.nftId) || 0
-      if (event.version <= currentVersion) {
-        console.log(
-          `[Realtime] Evento antigo descartado para ${event.nftId} (recebido v${event.version} <= atual v${currentVersion})`
-        )
-        return
-      }
-      entityVersionsRef.current.set(event.nftId, event.version)
+      entityVersionsRef.current.set(entityKey, event.version)
       setLastEvent(event)
 
       // 3. Update TanStack Query Catalog cache
@@ -115,33 +141,14 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       })
 
-      // 5. Always trigger real-time Price Alert if price has changed
-      let nftName = event.nftId
-      let oldPrice: string | undefined
-
-      const detailNft = queryClient.getQueryData<NFT>(['nft', event.nftId])
-      if (detailNft) {
-        nftName = detailNft.name
-        oldPrice = detailNft.price
-      } else {
-        const catalogEntries = queryClient.getQueriesData<CatalogResponse>({ queryKey: ['nfts'] })
-        for (const [, cat] of catalogEntries) {
-          const match = cat?.items?.find((i) => i.id === event.nftId)
-          if (match) {
-            nftName = match.name
-            oldPrice = match.price
-            break
-          }
-        }
-      }
-
-      if (!oldPrice || oldPrice !== event.price) {
+      // 5. Alert only when a cached previous price exists and actually changed.
+      if (oldPrice !== undefined && oldPrice !== event.price) {
         setPriceAlerts((prev) => [
           ...prev.filter((a) => a.nftId !== event.nftId),
           {
             nftId: event.nftId,
-            nftName: nftName === 'bored-ape-7090' ? 'Bored Ape #7090' : nftName,
-            oldPrice: oldPrice || '45.5000',
+            nftName,
+            oldPrice,
             newPrice: event.price,
             availableSupply: event.availableSupply,
             isSoldOut: event.isSoldOut,
@@ -171,23 +178,27 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const handleOrderUpdated = useCallback(
     (event: OrderUpdatedEvent) => {
-      if (!event || !event.orderId || !event.id) return
+      if (!event || !event.orderId || !event.id || !event.userId || event.userId !== user?.id) return
 
       if (processedEventIdsRef.current.has(event.id)) {
         return
       }
       processedEventIdsRef.current.add(event.id)
 
-      const currentVersion = entityVersionsRef.current.get(event.orderId) || 0
+      const entityKey = `order:${event.orderId}`
+      const currentVersion = entityVersionsRef.current.get(entityKey) || 0
       if (event.version <= currentVersion) {
         return
       }
-      entityVersionsRef.current.set(event.orderId, event.version)
+      entityVersionsRef.current.set(entityKey, event.version)
       setLastEvent(event)
 
       // Invalidate order queries
       queryClient.invalidateQueries({ queryKey: ['order', event.orderId] })
       queryClient.invalidateQueries({ queryKey: ['orders'] })
+      queryClient.invalidateQueries({ queryKey: ['cart'] })
+      queryClient.invalidateQueries({ queryKey: ['quote'] })
+      queryClient.invalidateQueries({ queryKey: ['nfts'] })
 
       setEventsHistory((prev) => [
         {
@@ -201,7 +212,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         ...prev.slice(0, 19),
       ])
     },
-    [queryClient]
+    [queryClient, user?.id]
   )
 
   const dismissPriceAlert = useCallback((nftId: string) => {
@@ -213,8 +224,8 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [])
 
   useEffect(() => {
-    // Connect Socket.IO
-    socket.connect()
+    let isCurrentEffect = true
+    let socketClient: (typeof import('./socket'))['socket'] | undefined
 
     const onConnect = () => {
       console.log('[Realtime Socket.IO] Conectado.')
@@ -231,39 +242,24 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       hasDisconnectedRef.current = true
     }
 
-    socket.on('connect', onConnect)
-    socket.on('disconnect', onDisconnect)
-    socket.on('nft.updated', handleNFTUpdated)
-    socket.on('order.updated', handleOrderUpdated)
-
-    // Listen to in-app event bus
-    const busListenerNFT = (e: Event) => {
-      const customEvt = e as CustomEvent<NFTUpdatedEvent>
-      handleNFTUpdated(customEvt.detail)
-    }
-
-    const busListenerOrder = (e: Event) => {
-      const customEvt = e as CustomEvent<OrderUpdatedEvent>
-      handleOrderUpdated(customEvt.detail)
-    }
-
-    if (REALTIME_EVENT_BUS) {
-      REALTIME_EVENT_BUS.addEventListener('nft.updated', busListenerNFT)
-      REALTIME_EVENT_BUS.addEventListener('order.updated', busListenerOrder)
-    }
-
-    // Default connection active flag
-    setIsConnected(true)
+    // Load the client after MSW installs its WebSocket interceptor.
+    void import('./socket').then(({ socket }) => {
+      if (!isCurrentEffect) return
+      socketClient = socket
+      socket.on('connect', onConnect)
+      socket.on('disconnect', onDisconnect)
+      socket.on('nft.updated', handleNFTUpdated)
+      socket.on('order.updated', handleOrderUpdated)
+      socket.connect()
+      if (socket.connected) onConnect()
+    })
 
     return () => {
-      socket.off('connect', onConnect)
-      socket.off('disconnect', onDisconnect)
-      socket.off('nft.updated', handleNFTUpdated)
-      socket.off('order.updated', handleOrderUpdated)
-      if (REALTIME_EVENT_BUS) {
-        REALTIME_EVENT_BUS.removeEventListener('nft.updated', busListenerNFT)
-        REALTIME_EVENT_BUS.removeEventListener('order.updated', busListenerOrder)
-      }
+      isCurrentEffect = false
+      socketClient?.off('connect', onConnect)
+      socketClient?.off('disconnect', onDisconnect)
+      socketClient?.off('nft.updated', handleNFTUpdated)
+      socketClient?.off('order.updated', handleOrderUpdated)
     }
   }, [handleNFTUpdated, handleOrderUpdated, reconcileWithServer])
 

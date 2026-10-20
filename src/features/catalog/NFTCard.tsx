@@ -1,25 +1,21 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Link } from '@tanstack/react-router'
-import { Heart, ShoppingBag, Check } from 'lucide-react'
+import { Heart } from 'lucide-react'
 import { NFT, CatalogResponse } from '@/types'
 import { formatEth, formatUsdEquivalent } from '@/lib/eth'
-import { useCart } from '@/features/cart/CartContext'
 import { useAuth } from '@/features/auth/AuthContext'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import { Badge } from '@/components/ui/Badge'
+import { getNFTImageSrcSet } from '@/lib/nftImage'
 
 interface NFTCardProps {
   nft: NFT
+  priority?: boolean
 }
 
-export const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
-  const { addToCart, items } = useCart()
+export const NFTCard: React.FC<NFTCardProps> = ({ nft, priority = false }) => {
   const { isAuthenticated, setAuthModalOpen } = useAuth()
   const queryClient = useQueryClient()
-  const [justAdded, setJustAdded] = useState(false)
-
-  const isAlreadyInCart = items.some((item) => item.nftId === nft.id)
 
   // Real Optimistic Mutation with Rollback for Favorites
   const favoriteMutation = useMutation({
@@ -102,68 +98,65 @@ export const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
     })
   }
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (nft.isSoldOut || nft.availableSupply <= 0) return
-
-    await addToCart(nft, 1)
-    setJustAdded(true)
-    setTimeout(() => setJustAdded(false), 2000)
-  }
-
   return (
-    <article className="group relative rounded-2xl border border-border bg-surface hover:border-primary/60 transition-all duration-300 flex flex-col p-3.5 shadow-sm hover:shadow-xl hover:-translate-y-1">
-      {/* Image Container with zoom */}
-      <Link to="/nft/$nftId" params={{ nftId: nft.id }} className="block relative aspect-square overflow-hidden rounded-xl bg-surface-secondary">
-        <img
-          src={nft.image}
-          alt={nft.name}
-          loading="lazy"
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-        />
+    <article className="group relative rounded-lg bg-surface transition-colors duration-200 flex flex-col px-2 pb-2.5 pt-1.5">
+      {/* Image Container with zoom & separated favorite button */}
+        <div className="relative aspect-square overflow-hidden rounded-md bg-surface-secondary">
+        <Link
+          to="/nft/$nftId"
+          params={{ nftId: nft.id }}
+          className="block w-full h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md"
+          aria-label={`Ver detalhes de ${nft.name}`}
+        >
+          <img
+            src={nft.image}
+            alt={nft.name}
+            srcSet={getNFTImageSrcSet(nft.image)}
+            sizes="(min-width: 1024px) 260px, (min-width: 640px) 32vw, 40vw"
+            loading={priority ? 'eager' : 'lazy'}
+            fetchPriority={priority ? 'high' : 'auto'}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        </Link>
 
-        {/* Favorite Heart Button */}
+        {/* Favorite Heart Button - completely decoupled from link */}
         <button
+          type="button"
           onClick={handleToggleFavorite}
-          className={`absolute top-2.5 right-2.5 p-2 rounded-full backdrop-blur-md transition-all ${
+          className={`absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-10 p-1.5 sm:p-2 rounded-full backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 ${
             nft.isLiked
               ? 'bg-red-500/20 text-red-500 border border-red-500/40'
               : 'bg-black/40 text-foreground-muted hover:text-white border border-white/10'
           }`}
           aria-label={nft.isLiked ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
         >
-          <Heart className={`w-3.5 h-3.5 ${nft.isLiked ? 'fill-red-500' : ''}`} />
+          <Heart className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${nft.isLiked ? 'fill-red-500' : ''}`} />
         </button>
 
         {/* Edition / Sold Out Badge */}
-        <div className="absolute bottom-2.5 left-2.5 flex gap-1.5">
+        <div className="sr-only">
           {nft.isSoldOut || nft.availableSupply <= 0 ? (
-            <Badge variant="danger" className="font-bold uppercase tracking-wider text-[10px]">
-              Esgotado
-            </Badge>
+            <span>Esgotado</span>
           ) : (
-            <Badge variant="secondary" className="backdrop-blur-md bg-black/60 text-foreground text-[10px]">
-              {nft.edition}
-            </Badge>
+            <span>{nft.edition}</span>
           )}
         </div>
-      </Link>
+      </div>
 
       {/* Card Content */}
-      <div className="pt-3 flex-1 flex flex-col justify-between space-y-2.5">
+      <div className="pt-2 flex-1 flex flex-col justify-between space-y-2">
         {/* Creator Info */}
-        <div className="flex items-center justify-between text-xs">
+        <div className="sr-only">
           <div className="flex items-center gap-1.5 text-foreground-muted truncate">
             <img
               src={nft.creator.avatar}
               alt={nft.creator.name}
-              className="w-4 h-4 rounded-full bg-surface-tertiary"
+              className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-surface-tertiary"
             />
             <span className="truncate">{nft.creator.name}</span>
           </div>
-          <span className="text-[11px] text-foreground-muted flex items-center gap-1">
-            <Heart className="w-3 h-3 text-red-400" />
+          <span className="text-[10px] sm:text-[11px] text-foreground-muted flex items-center gap-1">
+            <Heart className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-red-400" />
             {nft.likes}
           </span>
         </div>
@@ -173,64 +166,24 @@ export const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
           <Link
             to="/nft/$nftId"
             params={{ nftId: nft.id }}
-            className="font-bold text-sm text-foreground hover:text-primary transition-colors block truncate"
+            className="font-bold text-xs sm:text-sm text-foreground hover:text-primary transition-colors block truncate"
           >
             {nft.name}
           </Link>
-          <p className="text-xs text-foreground-muted truncate">{nft.collection}</p>
+          <p className="sr-only">{nft.collection}</p>
         </div>
 
-        {/* Bottom Price and Add CTA */}
-        <div className="pt-2 border-t border-border/40 flex items-center justify-between">
-          <div>
-            <span className="text-[10px] text-foreground-muted uppercase block leading-none mb-1">Preço</span>
-            <span className="font-mono font-bold text-sm text-primary block leading-none">
+        {/* Bottom Price (Editorial Layout matching Figma Frame 2:2 & 14:5226) */}
+        <div className="pt-2 border-t border-border/40 flex items-center justify-between gap-1">
+          <div className="min-w-0">
+            <span className="sr-only">Preço</span>
+            <span className="font-mono font-bold text-sm text-primary block leading-none truncate">
               {formatEth(nft.price)}
             </span>
-            <span className="text-[10px] text-foreground-muted block mt-0.5">
-              {formatUsdEquivalent(nft.price)}
-            </span>
           </div>
-
-          <button
-            onClick={handleAddToCart}
-            disabled={nft.isSoldOut || nft.availableSupply <= 0}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg font-bold text-xs transition-all shadow-sm ${
-              nft.isSoldOut || nft.availableSupply <= 0
-                ? 'bg-surface-secondary text-foreground-muted/40 cursor-not-allowed border border-border/40'
-                : justAdded
-                ? 'bg-emerald-600 text-white'
-                : isAlreadyInCart
-                ? 'bg-primary/20 text-primary border border-primary/40 hover:bg-primary/30'
-                : 'bg-primary text-primary-foreground hover:bg-primary-hover active:scale-95'
-            }`}
-            aria-label={
-              nft.isSoldOut
-                ? 'Esgotado'
-                : justAdded
-                ? 'Adicionado'
-                : isAlreadyInCart
-                ? 'No carrinho (+1)'
-                : 'Comprar'
-            }
-          >
-            {justAdded ? (
-              <>
-                <Check className="w-3.5 h-3.5" />
-                <span>Adicionado</span>
-              </>
-            ) : isAlreadyInCart ? (
-              <>
-                <Check className="w-3.5 h-3.5" />
-                <span>No carrinho</span>
-              </>
-            ) : (
-              <>
-                <ShoppingBag className="w-3.5 h-3.5" />
-                <span>Comprar</span>
-              </>
-            )}
-          </button>
+          <span className="sr-only">
+            {formatUsdEquivalent(nft.price)}
+          </span>
         </div>
       </div>
     </article>

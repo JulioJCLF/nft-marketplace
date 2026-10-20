@@ -45,6 +45,16 @@ export const orderHandlers = [
     }
 
     if (scenario === 'order_timeout') {
+      // Model a lost response after the server has committed the order. A retry with the
+      // same key must recover this exact receipt instead of charging/deducting twice.
+      const result = mockDB.createOrder(user.id, payload)
+      if (result.conflict) {
+        return HttpResponse.json(
+          { message: 'Conflito de idempotência: Esta chave já foi utilizada com dados de pedido divergentes.', code: 'IDEMPOTENCY_CONFLICT' },
+          { status: 409 }
+        )
+      }
+      if (result.status === 'existing') return HttpResponse.json(result.order, { status: 200 })
       await delay(8000)
       return HttpResponse.json(
         { message: 'Timeout simulado durante o processamento do pedido.', code: 'GATEWAY_TIMEOUT' },
@@ -77,6 +87,22 @@ export const orderHandlers = [
         { status: 400 }
       )
     }
+  }),
+
+  // GET /api/orders/by-idempotency/:key — recover a response lost after server commit
+  http.get('/api/orders/by-idempotency/:key', ({ request, params }) => {
+    const { errorResponse, user } = requireAuth(request)
+    if (errorResponse) return errorResponse
+
+    const { key } = params as { key: string }
+    const order = mockDB.getOrderByIdempotencyKey(user.id, key)
+    if (!order) {
+      return HttpResponse.json(
+        { message: 'Nenhum pedido encontrado para esta tentativa.', code: 'ORDER_NOT_FOUND' },
+        { status: 404 }
+      )
+    }
+    return HttpResponse.json(order)
   }),
 
   // GET /api/orders/:id

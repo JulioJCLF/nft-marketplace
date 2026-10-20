@@ -2,23 +2,38 @@ import { ws } from 'msw'
 import { toSocketIo } from '@mswjs/socket.io-binding'
 import { NFTUpdatedEvent, OrderUpdatedEvent } from '@/types'
 
-// Active simulated Socket.IO connections
-interface SocketClient {
+// Active simulated Socket.IO connections. Only emit through the MSW binding so
+// browser consumers must receive events through socket.io-client.
+interface SocketServerClient {
   emit: (event: string, ...args: unknown[]) => void
   on: (event: string, listener: (...args: unknown[]) => void) => void
 }
 
-const activeSocketClients = new Set<SocketClient>()
+const activeSocketClients = new Set<SocketServerClient>()
 
 // Define the MSW WebSocket handler for Socket.IO
 // Matching any origin connecting to /socket.io
-export const socketIoEndpoint = ws.link(
-  typeof window !== 'undefined'
-    ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/socket.io`
-    : 'ws://localhost:3000/socket.io'
-)
+// @mswjs/socket.io-binding normalizes the default `/socket.io/` path to the
+// websocket origin before matching. Match that normalized URL; non-Socket.IO
+// websockets (e.g. Vite HMR) are explicitly passed through below.
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+const socketOrigin = typeof window === 'undefined'
+  ? 'ws://localhost:3000'
+  : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`
+const escapedSocketOrigin = escapeRegExp(socketOrigin)
+const socketIoUrl = new RegExp(`^(?:${escapedSocketOrigin}/socket\\.io/?|${escapedSocketOrigin}/?)$`)
+export const socketIoEndpoint = ws.link(socketIoUrl)
 
 export const socketHandler = socketIoEndpoint.addEventListener('connection', (connection) => {
+  // The normalized Socket.IO matcher also sees same-origin root websockets.
+  // Preserve those unrelated connections instead of mocking them.
+  if (!connection.client.url.pathname.includes('/socket.io/')) {
+    connection.server.connect()
+    return
+  }
   try {
     const { client } = toSocketIo(connection)
     activeSocketClients.add(client)
@@ -40,12 +55,8 @@ export const socketHandler = socketIoEndpoint.addEventListener('connection', (co
   }
 })
 
-// Cross-window / in-app event bus for fallback and test dispatching
-export const REALTIME_EVENT_BUS = typeof window !== 'undefined' ? new EventTarget() : null
-
 // Broadcast functions
 export function broadcastNFTUpdate(event: NFTUpdatedEvent) {
-  // 1. Emit to all active socket.io-binding connections
   for (const client of activeSocketClients) {
     try {
       client.emit('nft.updated', event)
@@ -54,14 +65,9 @@ export function broadcastNFTUpdate(event: NFTUpdatedEvent) {
     }
   }
 
-  // 2. Emit to in-app event bus for instant deterministic testing
-  if (REALTIME_EVENT_BUS) {
-    REALTIME_EVENT_BUS.dispatchEvent(new CustomEvent('nft.updated', { detail: event }))
-  }
 }
 
 export function broadcastOrderUpdate(event: OrderUpdatedEvent) {
-  // 1. Emit to all active socket.io-binding connections
   for (const client of activeSocketClients) {
     try {
       client.emit('order.updated', event)
@@ -70,8 +76,4 @@ export function broadcastOrderUpdate(event: OrderUpdatedEvent) {
     }
   }
 
-  // 2. Emit to in-app event bus
-  if (REALTIME_EVENT_BUS) {
-    REALTIME_EVENT_BUS.dispatchEvent(new CustomEvent('order.updated', { detail: event }))
-  }
 }

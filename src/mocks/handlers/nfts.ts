@@ -22,7 +22,7 @@ export const nftHandlers = [
     const status = (url.searchParams.get('status') as StatusFilter) || undefined
     const sort = (url.searchParams.get('sort') as SortOption) || undefined
     const page = parseInt(url.searchParams.get('page') || '1', 10)
-    const limit = parseInt(url.searchParams.get('limit') || '6', 10)
+    const limit = parseInt(url.searchParams.get('limit') || '9', 10)
 
     const currentUser = extractAuthUser(request)
 

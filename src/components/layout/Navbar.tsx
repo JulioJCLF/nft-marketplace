@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { Link, useNavigate } from '@tanstack/react-router'
-import { ShoppingBag, User, LogOut, Wallet, BookOpen, Menu, X, Heart, Package } from 'lucide-react'
+import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
+import { ShoppingCart, User, LogIn, LogOut, Wallet, Menu, X, Heart, Package, Search, SlidersHorizontal } from 'lucide-react'
 import { useAuth } from '@/features/auth/AuthContext'
 import { useCart } from '@/features/cart/CartContext'
 import { Button } from '@/components/ui/Button'
@@ -9,8 +9,18 @@ export const Navbar: React.FC = () => {
   const { user, isAuthenticated, logout, setAuthModalOpen, setAuthModalMode } = useAuth()
   const { itemCount, setIsCartDrawerOpen } = useCart()
   const navigate = useNavigate()
+  const currentPath = useRouterState({ select: (state) => state.location.pathname })
+  const currentHash = useRouterState({ select: (state) => state.location.hash })
+  const currentSearchString = useRouterState({ select: (state) => state.location.searchStr })
+  const currentCategory = new URLSearchParams(currentSearchString).get('category') ?? 'all'
+  const isCreatorsActive = currentPath === '/' && currentCategory === 'art'
+  const isCatalogHash = currentHash.replace(/^#/, '') === 'catalog-grid'
+  const isMarketActive = currentPath === '/' && !isCreatorsActive && (isCatalogHash || currentCategory !== 'all')
+  const isHomeActive = currentPath === '/' && !isCreatorsActive && !isMarketActive
+  const isLearnActive = currentPath === '/docs'
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userDropdownOpen, setUserDropdownOpen] = useState(false)
+  const [mobileSearch, setMobileSearch] = useState('')
 
   const handleOpenAuth = (mode: 'login' | 'register') => {
     setAuthModalMode(mode)
@@ -26,69 +36,112 @@ export const Navbar: React.FC = () => {
   }
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+    <header className={`sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-md ${currentPath === '/' ? 'border-b-0 md:border-b' : ''}`}>
+      <div className={`relative max-w-[1264px] mx-auto px-6 md:px-8 h-[70px] items-center justify-between gap-4 ${currentPath === '/' ? 'h-[84px] !items-end md:h-[68px] md:!items-center' : 'md:h-[68px]'} ${currentPath.startsWith('/nft/') ? 'hidden lg:flex' : 'flex'}`}>
         {/* Brand / Logo */}
-        <Link to="/" className="flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg p-1">
-          <div className="w-10 h-10 rounded-lg bg-surface border border-border flex items-center justify-center text-primary group-hover:border-primary transition-colors shadow-sm">
-            <svg viewBox="0 0 32 32" className="w-6 h-6 fill-none">
-              <path d="M16 4L26 11L16 18L6 11L16 4Z" fill="#D08848" />
-              <path d="M6 13L16 20L26 13L26 17L16 26L6 17V13Z" fill="#E59A5A" />
-              <circle cx="16" cy="14" r="2.5" fill="#0E0C0A" />
-            </svg>
-          </div>
-          <div className="flex flex-col">
-            <span className="font-extrabold text-xl tracking-wider text-foreground leading-tight">
-              KURIO
-            </span>
-            <span className="text-[10px] text-foreground-muted tracking-widest font-mono uppercase">
-              Marketplace
-            </span>
-          </div>
+        <Link to="/" className={`flex items-center group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded ${currentPath === '/' ? 'hidden md:flex' : ''}`}>
+          <span className="font-bold text-sm tracking-[0.12em] text-foreground font-mono leading-none group-hover:text-primary transition-colors">
+            KURIO
+          </span>
         </Link>
 
+        {currentPath === '/' && (
+          <form
+            className="md:hidden flex flex-1 items-center gap-2"
+            onSubmit={(event) => {
+              event.preventDefault()
+              navigate({ to: '/', search: (previous) => ({ ...previous, search: mobileSearch.trim() || undefined, page: 1 }) })
+            }}
+          >
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" />
+              <input
+                type="search"
+                aria-label="Nome, coleção"
+                placeholder="Explorar coleções"
+                value={mobileSearch}
+                onChange={(event) => setMobileSearch(event.target.value)}
+                className="h-11 w-full rounded-[12px] bg-surface px-10 text-xs text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event('kurio:open-catalog-filters'))}
+              aria-label="Filtros"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-primary text-primary-foreground"
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+            </button>
+          </form>
+        )}
+
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
+        <nav className="hidden md:flex items-center gap-8 text-sm font-medium lg:absolute lg:left-[calc(50%-24px)] lg:top-0 lg:h-full lg:-translate-x-1/2 lg:gap-10 lg:text-base">
           <Link
             to="/"
-            className="text-foreground hover:text-primary transition-colors data-[status=active]:text-primary"
+            search={{ category: 'all', status: 'all', sort: 'recent', page: 1, limit: 9 }}
+            hash=""
+            activeOptions={{ exact: true, includeSearch: true, includeHash: true }}
+            hashScrollIntoView={false}
+            aria-current={isHomeActive ? 'page' : 'false'}
+            className={`pb-1 transition-colors lg:relative lg:flex lg:h-full lg:items-center lg:pb-0 ${isHomeActive ? 'text-primary font-bold border-b-2 border-primary lg:border-b-0 lg:after:absolute lg:after:bottom-0 lg:after:left-0 lg:after:right-0 lg:after:h-[3px] lg:after:bg-primary' : 'text-foreground-muted hover:text-foreground'}`}
           >
             Início
           </Link>
           <Link
             to="/"
             search={{ category: 'all' }}
-            className="text-foreground-muted hover:text-foreground transition-colors"
+            hash="catalog-grid"
+            activeOptions={{ exact: true, includeSearch: true, includeHash: true }}
+            hashScrollIntoView={false}
+            aria-current={isMarketActive ? 'page' : 'false'}
+            className={`pb-1 transition-colors lg:relative lg:flex lg:h-full lg:items-center lg:pb-0 ${isMarketActive ? 'text-primary font-bold border-b-2 border-primary lg:border-b-0 lg:after:absolute lg:after:bottom-0 lg:after:left-0 lg:after:right-0 lg:after:h-[3px] lg:after:bg-primary' : 'text-foreground-muted hover:text-foreground'}`}
           >
             Mercado
           </Link>
           <Link
             to="/"
             search={{ category: 'art' }}
-            className="text-foreground-muted hover:text-foreground transition-colors"
+            hash="catalog-grid"
+            activeOptions={{ exact: true, includeSearch: true, includeHash: true }}
+            hashScrollIntoView={false}
+            aria-current={isCreatorsActive ? 'page' : 'false'}
+            className={`pb-1 transition-colors lg:relative lg:flex lg:h-full lg:items-center lg:pb-0 ${isCreatorsActive ? 'text-primary font-bold border-b-2 border-primary lg:border-b-0 lg:after:absolute lg:after:bottom-0 lg:after:left-0 lg:after:right-0 lg:after:h-[3px] lg:after:bg-primary' : 'text-foreground-muted hover:text-foreground'}`}
           >
             Criadores
           </Link>
           <Link
             to="/docs"
-            className="flex items-center gap-1.5 text-foreground-muted hover:text-primary transition-colors"
+            activeOptions={{ exact: true, includeSearch: true, includeHash: true }}
+            hashScrollIntoView={false}
+            aria-current={isLearnActive ? 'page' : 'false'}
+            className={`flex items-center pb-1 transition-colors lg:flex lg:h-full lg:items-center lg:pb-0 lg:relative ${isLearnActive ? 'font-bold text-primary lg:after:absolute lg:after:bottom-0 lg:after:left-0 lg:after:right-0 lg:after:h-[3px] lg:after:bg-primary' : 'text-foreground-muted hover:text-foreground'}`}
           >
-            <BookOpen className="w-4 h-4 text-primary" />
             <span>Aprenda</span>
           </Link>
         </nav>
 
         {/* Right Action Icons & Auth */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 lg:gap-5">
+          {/* Quick Search Link */}
+          <Link
+            to="/"
+            search={{ category: 'all' }}
+            className="hidden h-8 w-8 items-center justify-center text-foreground transition-colors hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary md:flex"
+            aria-label="Buscar NFTs"
+          >
+            <Search className="h-5 w-5" />
+          </Link>
+
           {/* Cart Trigger */}
           <button
             onClick={() => setIsCartDrawerOpen(true)}
-            className="relative p-2.5 rounded-lg border border-border bg-surface hover:bg-surface-secondary text-foreground hover:border-primary/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className={`relative flex h-8 w-8 items-center justify-center text-foreground transition-colors hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${currentPath === '/' ? 'hidden md:flex' : ''}`}
             aria-label={`Abrir carrinho com ${itemCount} itens`}
           >
-            <ShoppingBag className="w-5 h-5" />
+            <ShoppingCart className="h-5 w-5" />
             {itemCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground shadow-md animate-in zoom-in-50">
+              <span className="absolute -top-1 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-sm animate-in zoom-in-50">
                 {itemCount}
               </span>
             )}
@@ -183,30 +236,26 @@ export const Navbar: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className={`flex items-center gap-2 ${currentPath === '/' ? 'hidden md:flex' : ''}`}>
               <Button
-                variant="outline"
                 size="sm"
                 onClick={() => handleOpenAuth('login')}
-                className="h-8 px-2.5 text-xs sm:h-9 sm:px-3"
+                className="h-9 w-[100px] justify-center gap-1.5 rounded-[5px] bg-primary px-3 py-2 text-sm font-bold uppercase tracking-normal text-primary-foreground shadow-none transition-colors hover:bg-primary-hover"
               >
+                <LogIn className="h-4 w-4" aria-hidden="true" />
                 Entrar
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => handleOpenAuth('login')}
-                className="hidden sm:inline-flex font-bold"
-              >
-                Conectar Carteira
               </Button>
             </div>
           )}
 
           {/* Mobile menu toggle */}
           <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg border border-border text-foreground hover:bg-surface"
-            aria-label="Abrir menu"
+            onClick={() => {
+              if (currentPath === '/') window.dispatchEvent(new Event('kurio:open-catalog-filters'))
+              else setMobileMenuOpen(!mobileMenuOpen)
+            }}
+            className={`md:hidden p-2 rounded-lg border border-border text-foreground hover:bg-surface ${currentPath === '/' ? 'hidden' : ''}`}
+            aria-label={currentPath === '/' ? 'Filtros' : 'Abrir menu'}
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>

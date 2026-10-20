@@ -8,16 +8,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: '#0E0C0A',
+        background: '#140D0A',
         surface: {
-          DEFAULT: '#18120E',
+          DEFAULT: '#241612',
           secondary: '#221914',
           tertiary: '#2D201A',
           hover: '#291F18',
         },
         primary: {
-          DEFAULT: '#D08848',
-          hover: '#E59A5A',
+          DEFAULT: '#D28A4C',
+          hover: '#E89B55',
           active: '#B87236',
           foreground: '#0E0C0A',
         },
@@ -27,8 +27,8 @@ export default {
           focus: '#D08848',
         },
         foreground: {
-          DEFAULT: '#F8F5F0',
-          muted: '#9E9186',
+          DEFAULT: '#F5F1EB',
+          muted: '#CFB28C',
           subtle: '#73675E',
         },
         card: {

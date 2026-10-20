@@ -1,143 +1,58 @@
-# NFT Marketplace — React + TypeScript + Cloudflare Pages
+# Kurio — NFT Marketplace
 
-> Aplicação completa de **NFT Marketplace** desenvolvida com alta fidelidade ao design do Figma, seguindo rigorosamente todos os critérios técnicos, contratos de transporte, simulação de APIs via MSW, eventos em tempo real com Socket.IO e infraestrutura estática para o Cloudflare Pages.
+Marketplace de NFTs desenvolvido em React e TypeScript. Inclui catálogo, detalhe do NFT, favoritos, carrinho, checkout simulado, perfil e carteiras. MSW fornece os dados e as APIs locais; não há pagamentos reais nem transações on-chain.
 
----
+## Começar
 
-## 🔗 Links Oficiais
-
-- **Repositório GitHub:** `https://github.com/JulioJCLF/nft-marketplace`
-- **Marketplace (Cloudflare Pages):** `https://nft-marketplace-challenge.pages.dev`
-- **Documentação Pública Hospedada:** `https://nft-marketplace-challenge.pages.dev/docs`
-
----
-
-## 🚀 Funcionalidades Principais
-
-- **Catálogo Inteligente:**
-  - Busca textual com debounce e sincronização em tempo real na URL.
-  - Filtros combináveis: Categorias, Faixas de Preço Min/Max (ETH) e Disponibilidade (Disponíveis/Esgotados).
-  - Ordenação por Menor Preço, Maior Preço, Recentes e Populares.
-  - Paginação fluida com reinício automático ao mudar filtros e histórico preservado.
-- **Detalhes da Obra & 404:**
-  - Galeria de imagens com miniaturas e zoom interativo.
-  - Exibição de propriedades (traits) com cálculo de raridade percentual.
-  - Histórico de transações com hashes blockchain simulados.
-  - Tratamento resiliente de NFT inexistente (404) com botão de retorno.
-- **Favoritos com Atualização Otimista Real:**
-  - Alternância imediata do coração e contador na interface.
-  - Persistência associada à identidade do usuário autenticado.
-  - Rollback automático para o estado anterior caso a API simule erro 500.
-- **Carrinho & Precisão Financeira:**
-  - Adição, controle de quantidade inteira e limites de estoque.
-  - Validação e aplicação de cupons promocionais (`DESC10`, `ETH5`, `VIP20`).
-  - Totalizadores processados via **Decimal.js** (eliminação completa de erros de ponto flutuante em ETH).
-- **Checkout, Idempotência & Pagamento:**
-  - Rota protegida `/checkout` com retorno inteligente após login.
-  - Seleção de provedores (MetaMask, Coinbase, Rainbow, WalletConnect) e redes (Mainnet, Sepolia, Arbitrum, Polygon).
-  - Bloqueio de checkout com cotação desatualizada quando preços mudam em tempo real.
-  - Chave de idempotência única por pedido (prevenção de cobrança dupla; erro 409 em divergência).
-  - Preservação do carrinho em caso de recusa de pagamento (402).
-  - Recibo imutável contendo hash da transação, data e snapshot de valores.
-- **Sessão, Perfil & Carteiras:**
-  - Login, cadastro e logout com persistência de token JWT simulado no reload.
-  - Isolamento estrito de cache entre usuários (sem vazamento de dados).
-  - Cadastro de carteiras públicas com validação de formato `0x`, escolha de carteira principal e alteração de senha.
-- **Tempo Real com Socket.IO:**
-  - Eventos `nft.updated` e `order.updated` com identidade estável e versão.
-  - Monotonia de versão (descarte de eventos obsoletos ou duplicados).
-  - Reconciliação automática com as APIs REST após reconexão.
-- **Simulador de Cenários & Reset:**
-  - Barra superior interativa para acionar cenários determinísticos (500 Error, 401 Expired, Rede Lenta, Falha de Pagamento) e disparar eventos de tempo real.
-  - Botão de Reset que restaura o banco simulado ao estado inicial em 1 clique.
-
----
-
-## 🛠️ Stack Tecnológica
-
-| Tecnologia | Finalidade |
-|---|---|
-| **React 18** | Biblioteca base para renderização de componentes |
-| **TypeScript** | Tipagem estrita de contratos de domínio, transporte e UI |
-| **Vite 6** | Build tool ultrarrápido com chunk splitting customizado |
-| **TanStack Router** | Roteamento declarativo com search params tipados na URL |
-| **TanStack Query v5** | Gestão de cache remoto, mutações e atualizações otimistas |
-| **Axios** | Cliente HTTP com interceptors de autenticação e cenários |
-| **Tailwind CSS** | Estilização utilitária com paleta fiel extraída do Figma |
-| **shadcn/ui & Radix UI** | Primitivos acessíveis com controle de foco e teclado |
-| **Decimal.js** | Biblioteca de precisão decimal de 28 dígitos para cálculos em ETH |
-| **MSW 2 (Mock Service Worker)** | Interceptação de requisições REST e WebSocket no Service Worker |
-| **Socket.IO Client** | Cliente do protocolo em tempo real |
-| **@mswjs/socket.io-binding** | Binding para suporte ao protocolo Socket.IO no MSW |
-| **Playwright** | Suíte de testes E2E e testes de regressão visual |
-| **Lighthouse** | Auditoria automatizada de Performance, A11y, Best Practices e SEO |
-
----
-
-## 👥 Contas de Teste Pré-configuradas
-
-| Nome | E-mail | Senha | Carteira Principal | Saldo Inicial |
-|---|---|---|---|---|
-| **Alice Vance** | `alice@example.com` | `Password123!` | `0x71C...392A` (MetaMask) | `124.5000 ETH` |
-| **Bob Martin** | `bob@example.com` | `Password123!` | `0x33A...91D2` (MetaMask) | `80.0000 ETH` |
-
-> Também é possível cadastrar novas contas ou usar o preenchimento automático em 1 clique no modal de autenticação.
-
----
-
-## 💻 Instalação & Execução Local
+Requisitos: Node.js 20+ e npm.
 
 ```bash
-# 1. Clonar o repositório
 git clone https://github.com/JulioJCLF/nft-marketplace.git
 cd nft-marketplace
-
-# 2. Instalar dependências
 npm install
-
-# 3. Iniciar servidor de desenvolvimento (porta 3000)
-npm run dev
-
-# 4. Compilar para produção e visualizar preview
-npm run build
-npm run preview
+npm run dev:mocks
 ```
 
----
+Abra `http://localhost:3000`. O comando inicia o Vite com os mocks habilitados.
 
-## ⚙️ Variáveis de Ambiente
+## Comandos
 
-Crie um arquivo `.env` caso deseje sobrescrever as configurações:
+| Comando | Uso |
+|---|---|
+| `npm run build` | Verifica TypeScript e gera `dist/` |
+| `npm run typecheck` | Verifica tipos |
+| `npm run lint` | Executa ESLint |
+| `npm test` | Testes E2E Playwright |
+| `npm run test:visual` | Testes de regressão visual |
+| `npm run lighthouse` | Auditoria Lighthouse |
 
-```ini
-# Habilita o Mock Service Worker (padrão: true)
-VITE_ENABLE_MOCKS=true
-```
+## Rotas
 
----
+- `/` — catálogo, busca, filtros e ordenação
+- `/nft/:id` — detalhes, histórico e avaliações
+- `/cart` e `/checkout` — carrinho e pedido simulado
+- `/profile` — perfil, favoritos e carteiras
+- `/docs` — documentação técnica da aplicação
 
-## 🧪 Testes Automatizados & Qualidade
+## Dados de demonstração
 
-```bash
-# Executar todos os testes E2E do Playwright
-npx playwright test
+| Usuário | E-mail | Senha |
+|---|---|---|
+| Alice Vance | `alice@example.com` | `Password123!` |
+| Bob Martin | `bob@example.com` | `Password123!` |
 
-# Executar testes em modo interativo com UI
-npm run test:e2e:ui
+Use o **Simulador de Cenários MSW** na aplicação para testar falhas HTTP, pagamento recusado ou pendente, latência e eventos Socket.IO. A opção **Resetar** restaura os dados simulados no navegador.
 
-# Executar testes de regressão visual com snapshots
-npm run test:visual
+## Tecnologias
 
-# Executar medições e auditoria Lighthouse
-npm run lighthouse
-```
+React, TypeScript, Vite, TanStack Router/Query, Tailwind CSS, Radix UI, Decimal.js, MSW, Socket.IO e Playwright.
 
----
+## Validação e publicação
 
-## ☁️ Publicação no Cloudflare Pages
+Os detalhes dos testes, resultados Lighthouse e limitações conhecidas estão em [`docs/second-brain/VALIDATION.md`](docs/second-brain/VALIDATION.md). A configuração do Cloudflare Pages está em [`docs/second-brain/DEPLOYMENT.md`](docs/second-brain/DEPLOYMENT.md).
 
-O projeto foi configurado com suporte nativo a builds estáticos do Vite:
-- **Build command:** `npm run build`
-- **Output directory:** `dist`
-- **Branch:** `main`
-- **Roteamento SPA:** Garantido pelo arquivo `public/_redirects` (`/* /index.html 200`), permitindo recarregar rotas diretas como `/docs`, `/checkout` e `/profile` sem erros 404.
+- Build: `npm run build`
+- Diretório de saída: `dist`
+- Fallback SPA: `public/_redirects`
+
+A [demonstração pública](https://nft-marketplace-6b1.pages.dev) ainda pode não corresponder a este checkout; confira o estado de publicação antes de usá-la para avaliação.

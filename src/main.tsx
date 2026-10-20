@@ -1,10 +1,12 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { App } from './app/App'
-import { enableMocking } from './mocks/browser'
 import './index.css'
 
-enableMocking().then(() => {
+// Fetch the app and mock handlers together; render only after MSW is ready.
+const mockingPromise = import('./mocks/browser').then(({ enableMocking }) => enableMocking())
+const appPromise = import('./app/App')
+
+Promise.all([mockingPromise, appPromise]).then(([, { App }]) => {
   const rootElement = document.getElementById('root')
   if (rootElement) {
     ReactDOM.createRoot(rootElement).render(

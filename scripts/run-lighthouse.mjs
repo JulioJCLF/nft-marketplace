@@ -6,7 +6,7 @@ import * as chromeLauncher from 'chrome-launcher'
 
 const PORT = 4173
 const BASE_URL = `http://localhost:${PORT}`
-const REPORTS_DIR = path.resolve(process.cwd(), 'lighthouse-reports')
+const REPORTS_DIR = path.resolve(process.env.LIGHTHOUSE_REPORTS_DIR || path.join(process.cwd(), 'lighthouse-reports'))
 
 if (!fs.existsSync(REPORTS_DIR)) {
   fs.mkdirSync(REPORTS_DIR, { recursive: true })

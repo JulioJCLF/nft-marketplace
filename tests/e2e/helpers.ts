@@ -1,16 +1,23 @@
-import { Page } from '@playwright/test'
+import { expect, Page } from '@playwright/test'
 
 export async function resetMockDatabase(page: Page) {
   await page.goto('/')
-  await page.evaluate(async () => {
+  await page.waitForLoadState('networkidle')
+  const resetResult = await page.evaluate(async () => {
     localStorage.removeItem('nft_active_scenario')
     localStorage.removeItem('nft_auth_token')
-    try {
-      await fetch('/api/system/reset', { method: 'POST' })
-    } catch {
-      // ignore
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      try {
+        const response = await fetch('/api/system/reset', { method: 'POST' })
+        if (response.ok) return await response.json() as { success: boolean }
+      } catch {
+        // MSW's service worker may still be activating on the first load.
+      }
+      await new Promise((resolve) => window.setTimeout(resolve, 100))
     }
+    return null
   })
+  if (!resetResult?.success) throw new Error('MSW não confirmou o reset do estado antes do teste.')
   await page.reload()
   await page.waitForLoadState('networkidle')
 }
@@ -28,12 +35,31 @@ export async function loginAsAlice(page: Page) {
   await page.locator('[data-testid="navbar-user-menu"]').waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
 }
 
+export async function waitForSocketConnection(page: Page, timeoutMs = 10000) {
+  await page.evaluate(async (timeout) => {
+    const { socket } = await import('/src/realtime/socket.ts')
+    if (socket.connected) return
+
+    await new Promise<void>((resolve, reject) => {
+      const timeoutId = window.setTimeout(() => {
+        socket.off('connect', onConnect)
+        reject(new Error('Socket.IO não conectou dentro do tempo esperado.'))
+      }, timeout)
+      const onConnect = () => {
+        window.clearTimeout(timeoutId)
+        socket.off('connect', onConnect)
+        resolve()
+      }
+      socket.on('connect', onConnect)
+      if (socket.connected) onConnect()
+    })
+  }, timeoutMs)
+}
+
 export async function openMobileFilterDrawerIfNeeded(page: Page) {
-  const isDesktopSidebarVisible = await page.locator('aside').isVisible().catch(() => false)
-  if (!isDesktopSidebarVisible) {
-    const filterBtn = page.getByRole('button', { name: /filtros/i }).first()
-    if (await filterBtn.isVisible()) {
-      await filterBtn.click()
-    }
+  const viewportWidth = page.viewportSize()?.width ?? 0
+  if (viewportWidth < 1024) {
+    await page.getByRole('button', { name: 'Filtros' }).click()
+    await expect(page.getByRole('dialog')).toBeVisible()
   }
 }

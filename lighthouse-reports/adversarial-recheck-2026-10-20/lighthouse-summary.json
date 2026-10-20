@@ -1,0 +1,38 @@
+{
+  "Home_Mobile": {
+    "performance": 92,
+    "accessibility": 100,
+    "bestPractices": 100,
+    "seo": 100,
+    "lcp": 3163,
+    "cls": 0,
+    "tbt": 10
+  },
+  "Home_Desktop": {
+    "performance": 100,
+    "accessibility": 100,
+    "bestPractices": 100,
+    "seo": 100,
+    "lcp": 716,
+    "cls": 0,
+    "tbt": 0
+  },
+  "Detail_Mobile": {
+    "performance": 94,
+    "accessibility": 100,
+    "bestPractices": 100,
+    "seo": 100,
+    "lcp": 2872,
+    "cls": 0,
+    "tbt": 4
+  },
+  "Detail_Desktop": {
+    "performance": 100,
+    "accessibility": 100,
+    "bestPractices": 100,
+    "seo": 100,
+    "lcp": 694,
+    "cls": 0,
+    "tbt": 0
+  }
+}

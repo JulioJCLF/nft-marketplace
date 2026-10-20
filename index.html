@@ -12,9 +12,40 @@
     <title>NFT Marketplace | O Futuro da Arte Digital</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap">
-    <link rel="preload" as="image" href="/nfts/figma/img4_8459.png" fetchpriority="high">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap"></noscript>
+    <script>
+      const nftImages = {
+        'bored-ape-7090': '/nfts/figma/img4_8459.avif',
+        'bored-ape-8817': '/nfts/figma/img1_2986.avif',
+        'cyber-kong-124': '/nfts/figma/img6_9df2.avif',
+        'golden-ape-4421': '/nfts/figma/img5_8758.avif',
+        'mutant-ape-992': '/nfts/figma/img4_8459.avif',
+        'captain-ape-312': '/nfts/figma/img1_2986.avif',
+        'solarpunk-ape-505': '/nfts/figma/img5_8758.avif',
+        'party-ape-101': '/nfts/figma/img6_9df2.avif',
+        'shadow-gorilla-77': '/nfts/figma/img5_8758.avif',
+        'cosmic-ape-808': '/nfts/figma/img1_2986.avif',
+        'cyber-samurai-404': '/nfts/figma/img6_9df2.avif',
+        'genesis-ape-001': '/nfts/figma/img4_8459.avif',
+      };
+      const nftId = window.location.pathname.match(/^\/nft\/([^/]+)/)?.[1];
+      let imageToPreload = nftId ? nftImages[decodeURIComponent(nftId)] : '/nfts/figma/img4_8459.avif';
+      if (imageToPreload && window.matchMedia('(max-width: 1023px)').matches) {
+        const slotWidth = window.innerWidth * (nftId ? 0.86 : 0.40);
+        const targetWidth = slotWidth * window.devicePixelRatio;
+        const variantWidth = targetWidth > 768 ? null : targetWidth > 384 ? 768 : targetWidth > 320 ? 384 : 320;
+        if (variantWidth) imageToPreload = imageToPreload.replace('.avif', `-${variantWidth}.avif`);
+      }
+      if (imageToPreload) {
+        const preload = document.createElement('link');
+        preload.rel = 'preload';
+        preload.as = 'image';
+        preload.href = imageToPreload;
+        preload.fetchPriority = 'high';
+        document.head.appendChild(preload);
+      }
+    </script>
   </head>
   <body class="bg-background text-foreground antialiased selection:bg-primary selection:text-primary-foreground min-h-screen">
     <div id="root"></div>

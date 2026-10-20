@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/features/auth/AuthContext'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
@@ -14,10 +14,7 @@ import {
   Wallet as WalletIcon,
   Package,
   Heart,
-  KeyRound,
-  Plus,
   Trash2,
-  Star,
   CheckCircle2,
   AlertCircle,
   ExternalLink,
@@ -43,8 +40,13 @@ export const ProfilePage: React.FC = () => {
 
   // Profile Form States
   const [name, setName] = useState('')
+  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [avatar, setAvatar] = useState('')
+  const [profileWalletAlias, setProfileWalletAlias] = useState('')
+  const [profileEnsName, setProfileEnsName] = useState('')
+  const [profileEnsSuffix, setProfileEnsSuffix] = useState('eth')
+  const avatarInputRef = useRef<HTMLInputElement>(null)
   const [profileMessage, setProfileMessage] = useState<string | null>(null)
   const [profileError, setProfileError] = useState<string | null>(null)
 
@@ -61,6 +63,15 @@ export const ProfilePage: React.FC = () => {
   const [newWalletProvider, setNewWalletProvider] = useState<WalletProvider>('metamask')
   const [newWalletNetwork, setNewWalletNetwork] = useState<NetworkId>('mainnet')
   const [walletError, setWalletError] = useState<string | null>(null)
+  const [networkError, setNetworkError] = useState<string | null>(null)
+  const [walletAlias, setWalletAlias] = useState('')
+  const [walletProfileName, setWalletProfileName] = useState('')
+  const [ensOrSecondary, setEnsOrSecondary] = useState('')
+  const [referralCode, setReferralCode] = useState('')
+  const [ensName, setEnsName] = useState('')
+  const [ensSuffix, setEnsSuffix] = useState('eth')
+  const [walletProfileMessage, setWalletProfileMessage] = useState<string | null>(null)
+  const [walletProfileError, setWalletProfileError] = useState<string | null>(null)
 
   useEffect(() => {
     if (isLoading) return
@@ -69,8 +80,12 @@ export const ProfilePage: React.FC = () => {
       setAuthModalOpen(true)
     } else if (user) {
       setName(user.name)
+      setUsername(user.username ?? '')
       setEmail(user.email)
       setAvatar(user.avatar)
+      setProfileWalletAlias(user.walletAlias ?? '')
+      setProfileEnsName(user.ensName ?? '')
+      setProfileEnsSuffix(user.ensSuffix ?? 'eth')
     }
   }, [isLoading, isAuthenticated, user, setAuthModalOpen, setRedirectAfterAuth])
 
@@ -102,9 +117,20 @@ export const ProfilePage: React.FC = () => {
     enabled: !!user,
   })
 
+  useEffect(() => {
+    const primaryWallet = walletsData?.items.find((wallet) => wallet.isPrimary)
+    if (!primaryWallet) return
+    setWalletAlias(primaryWallet.walletAlias ?? '')
+    setWalletProfileName(primaryWallet.profileName ?? '')
+    setEnsOrSecondary(primaryWallet.ensOrSecondary ?? '')
+    setReferralCode(primaryWallet.referralCode ?? '')
+    setEnsName(primaryWallet.ensName ?? '')
+    setEnsSuffix(primaryWallet.ensSuffix ?? 'eth')
+  }, [walletsData?.items])
+
   // Mutations
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: { name: string; email: string; avatar: string }) => {
+    mutationFn: async (data: { name: string; username: string; email: string; avatar: string; walletAlias: string; ensName: string; ensSuffix: string }) => {
       const res = await api.put('/profile', data)
       return res.data
     },
@@ -147,6 +173,44 @@ export const ProfilePage: React.FC = () => {
     },
   })
 
+  const updateWalletNetworkMutation = useMutation({
+    mutationFn: async ({ walletId, network }: { walletId: string; network: NetworkId }) => {
+      await api.put(`/wallets/${walletId}/network`, { network })
+    },
+    onMutate: async ({ walletId, network }) => {
+      const queryKey = ['wallets', user?.id]
+      await queryClient.cancelQueries({ queryKey })
+      const previous = queryClient.getQueryData<{ items: Wallet[] }>(queryKey)
+      queryClient.setQueryData<{ items: Wallet[] } | undefined>(queryKey, (current) =>
+        current ? { ...current, items: current.items.map((wallet) => wallet.id === walletId ? { ...wallet, network } : wallet) } : current
+      )
+      setNetworkError(null)
+      return { previous, queryKey }
+    },
+    onError: (err: unknown, _variables, context) => {
+      if (context?.previous) queryClient.setQueryData(context.queryKey, context.previous)
+      setNetworkError((err as Error).message || 'Falha ao atualizar a rede da carteira')
+    },
+    onSuccess: (_data, _variables, context) => {
+      if (context) queryClient.invalidateQueries({ queryKey: context.queryKey })
+    },
+  })
+
+  const updateWalletProfileMutation = useMutation({
+    mutationFn: async ({ walletId, fields }: { walletId: string; fields: Pick<Wallet, 'walletAlias' | 'profileName' | 'ensOrSecondary' | 'referralCode' | 'ensName' | 'ensSuffix'> }) => {
+      await api.put(`/wallets/${walletId}/profile`, fields)
+    },
+    onSuccess: () => {
+      setWalletProfileMessage('Dados da carteira salvos.')
+      setWalletProfileError(null)
+      queryClient.invalidateQueries({ queryKey: ['wallets', user?.id] })
+    },
+    onError: (err: unknown) => {
+      setWalletProfileError((err as Error).message || 'Falha ao salvar os dados da carteira')
+      setWalletProfileMessage(null)
+    },
+  })
+
   const removeWalletMutation = useMutation({
     mutationFn: async (walletId: string) => {
       await api.delete(`/wallets/${walletId}`)
@@ -165,7 +229,7 @@ export const ProfilePage: React.FC = () => {
         address: newWalletAddress.trim(),
         provider: newWalletProvider,
         network: newWalletNetwork,
-        isPrimary: false,
+        isPrimary: !wallets.some((wallet) => wallet.isPrimary),
       })
       return res.data
     },
@@ -200,14 +264,14 @@ export const ProfilePage: React.FC = () => {
   const favorites = favoritesData?.items || []
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div className="mx-auto max-w-[1200px] px-4 py-8 md:px-0 md:pt-7">
       {/* Mobile Horizontal Tabs (< lg) */}
-      <div className="lg:hidden flex border-b border-border overflow-x-auto pb-2 gap-2">
+      <div className="mb-6 flex gap-5 overflow-x-auto border-b border-border pb-2 lg:hidden">
         {[
           { id: 'profile', label: 'Dados do Perfil', icon: UserIcon },
-          { id: 'wallets', label: `Carteiras (${wallets.length})`, icon: WalletIcon },
-          { id: 'orders', label: `Meus Pedidos (${orders.length})`, icon: Package },
-          { id: 'favorites', label: `Favoritos (${favorites.length})`, icon: Heart },
+          { id: 'wallets', label: 'Carteiras', icon: WalletIcon },
+          { id: 'orders', label: 'Atividade', icon: Package },
+          { id: 'favorites', label: 'Lista de interesse', icon: Heart },
         ].map((tab) => {
           const Icon = tab.icon
           const isActive = activeTab === tab.id
@@ -215,10 +279,10 @@ export const ProfilePage: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 py-2 px-3.5 text-xs font-bold rounded-lg whitespace-nowrap transition-all ${
+              className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-1 py-2 text-xs font-semibold transition-colors ${
                 isActive
-                  ? 'bg-primary text-black font-extrabold shadow-sm'
-                  : 'bg-surface border border-border text-foreground-muted hover:text-foreground'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-foreground-muted hover:text-foreground'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -229,49 +293,16 @@ export const ProfilePage: React.FC = () => {
       </div>
 
       {/* Main 2-Column Layout for Desktop (Figma Frames 8 & 9) */}
-      <div className="flex flex-col lg:flex-row gap-8 items-start">
+      <div className="flex flex-col items-start gap-7 lg:flex-row lg:gap-7">
         {/* Left Sidebar (Desktop) */}
-        <aside className="w-full lg:w-72 shrink-0 space-y-6 hidden lg:block">
-          {/* User Card */}
-          <div className="p-6 rounded-2xl border border-border bg-surface text-center space-y-4 shadow-sm">
-            <div className="relative inline-block">
-              <img
-                src={user.avatar}
-                alt={user.name}
-                className="w-24 h-24 rounded-full mx-auto bg-surface-secondary border-2 border-primary/60 object-cover shadow-lg"
-              />
-              <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-surface" title="Online" />
-            </div>
-
-            <div>
-              <h2 className="text-lg font-extrabold text-foreground">{user.name}</h2>
-              <p className="text-xs text-foreground-muted truncate">{user.email}</p>
-              <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-[11px] font-bold">
-                <CheckCircle2 className="w-3 h-3" />
-                <span>Colecionador Verificado</span>
-              </div>
-            </div>
-
-            {/* Account Quick Stats */}
-            <div className="pt-4 border-t border-border grid grid-cols-2 gap-2 text-center text-xs">
-              <div className="p-2 rounded-lg bg-surface-secondary/50">
-                <span className="text-[10px] text-foreground-muted block">Pedidos</span>
-                <span className="font-mono font-bold text-foreground">{orders.length}</span>
-              </div>
-              <div className="p-2 rounded-lg bg-surface-secondary/50">
-                <span className="text-[10px] text-foreground-muted block">Favoritos</span>
-                <span className="font-mono font-bold text-primary">{favorites.length}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Vertical Navigation Menu */}
-          <nav className="p-3 rounded-2xl border border-border bg-surface shadow-sm space-y-1">
+        <aside className="hidden w-full shrink-0 lg:block lg:w-[310px]">
+          <nav className="min-h-[407px] bg-surface px-0 pb-3 pt-3">
+            <h2 className="px-2.5 pb-2 text-base font-bold text-foreground">Meu perfil</h2>
             {[
               { id: 'profile', label: 'Dados do Perfil', icon: UserIcon },
-              { id: 'wallets', label: 'Carteiras Web3', count: wallets.length, icon: WalletIcon },
-              { id: 'orders', label: 'Histórico de Pedidos', count: orders.length, icon: Package },
-              { id: 'favorites', label: 'Favoritos Salvos', count: favorites.length, icon: Heart },
+              { id: 'wallets', label: 'Carteiras', icon: WalletIcon },
+              { id: 'orders', label: 'Atividade', icon: Package },
+              { id: 'favorites', label: 'Lista de interesse', icon: Heart },
             ].map((item) => {
               const Icon = item.icon
               const isActive = activeTab === item.id
@@ -279,64 +310,53 @@ export const ProfilePage: React.FC = () => {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all ${
+                  className={`relative flex w-full items-center justify-between px-3 py-3 text-xs font-medium transition-colors ${
                     isActive
-                      ? 'bg-primary text-black shadow'
-                      : 'text-foreground-muted hover:text-foreground hover:bg-surface-secondary'
+                      ? 'text-primary before:absolute before:inset-y-0 before:left-0 before:w-[5px] before:bg-primary'
+                      : 'text-foreground-muted hover:text-primary'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <Icon className="w-4 h-4" />
                     <span>{item.label}</span>
                   </div>
-                  {item.count !== undefined && (
-                    <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${
-                        isActive
-                          ? 'bg-black/20 text-black font-extrabold'
-                          : 'bg-surface-secondary border border-border text-foreground-muted'
-                      }`}
-                    >
-                      {item.count}
-                    </span>
-                  )}
                 </button>
               )
             })}
 
-            <div className="pt-2 mt-2 border-t border-border">
+            <div className="mt-1 border-t border-border pt-1">
               <button
                 onClick={() => {
                   logout()
                   navigate({ to: '/' })
                 }}
-                className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                className="flex w-full items-center gap-2.5 px-3 py-3 text-xs font-semibold text-primary transition-colors hover:bg-surface-secondary"
               >
                 <LogOut className="w-4 h-4" />
-                <span>Encerrar Sessão</span>
+                <span>Sair</span>
               </button>
             </div>
           </nav>
         </aside>
 
         {/* Right Main Content Area */}
-        <div className="flex-1 min-w-0 w-full space-y-6">
+        <div className="min-w-0 w-full flex-1 space-y-6">
 
       {/* Tab: Profile Data & Password */}
       {activeTab === 'profile' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div className="space-y-7">
+          <h1 className="text-base font-bold text-foreground">Perfil do colecionador</h1>
           {/* Personal Info Form */}
-          <div className="p-6 rounded-2xl border border-border bg-surface shadow-sm space-y-4">
-            <h2 className="text-base font-bold text-foreground">Informações Pessoais</h2>
+          <div className="space-y-4">
 
             {profileMessage && (
-              <div className="p-3 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
+              <div role="status" className="p-3 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>{profileMessage}</span>
               </div>
             )}
             {profileError && (
-              <div className="p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+              <div role="alert" className="p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
                 <AlertCircle className="w-4 h-4" />
                 <span>{profileError}</span>
               </div>
@@ -347,186 +367,266 @@ export const ProfilePage: React.FC = () => {
                 e.preventDefault()
                 setProfileMessage(null)
                 setProfileError(null)
-                updateProfileMutation.mutate({ name, email, avatar })
+                updateProfileMutation.mutate({ name, username, email, avatar, walletAlias: profileWalletAlias, ensName: profileEnsName, ensSuffix: profileEnsSuffix })
               }}
-              className="space-y-4 text-xs"
+              className="space-y-6 text-xs"
             >
-              <div>
-                <label className="block font-medium text-foreground-muted mb-1.5">Avatar / Foto de Perfil</label>
-                <div className="flex items-center gap-3">
-                  {['/avatars/alice.svg', '/avatars/bob.svg', '/avatars/yuga.svg', '/avatars/creator.svg'].map(
-                    (av, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setAvatar(av)}
-                        className={`w-10 h-10 rounded-full overflow-hidden border-2 transition-all ${
-                          avatar === av ? 'border-primary ring-2 ring-primary/40' : 'border-border opacity-60'
-                        }`}
-                      >
-                        <img src={av} alt="Opção de avatar" className="w-full h-full object-cover" />
-                      </button>
-                    )
-                  )}
+              <div className="grid grid-cols-1 items-start gap-x-6 gap-y-6 md:grid-cols-2">
+                <div className="space-y-6">
+                  <div>
+                    <label htmlFor="profile-display-name" className="mb-2 block text-xs text-foreground">Nome de exibição<span className="text-primary">*</span></label>
+                    <Input id="profile-display-name" value={name} onChange={(e) => setName(e.target.value)} required className="h-10 rounded-sm border-border bg-transparent px-3 text-xs" />
+                  </div>
+                  <div>
+                    <label htmlFor="profile-email" className="mb-2 block text-xs text-foreground">E-mail<span className="text-primary">*</span></label>
+                    <Input id="profile-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-10 rounded-sm border-border bg-transparent px-3 text-xs" />
+                  </div>
+                  <div>
+                    <label htmlFor="profile-wallet-alias" className="mb-2 block text-xs text-foreground">Apelido da carteira<span className="text-primary">*</span></label>
+                    <Input id="profile-wallet-alias" value={profileWalletAlias} onChange={(e) => setProfileWalletAlias(e.target.value)} className="h-10 rounded-sm border-border bg-transparent px-3 text-xs" />
+                  </div>
+                  {passwordMessage && <p className="text-xs text-emerald-400" role="status">{passwordMessage}</p>}
+                  {passwordError && <p className="text-xs text-red-400" role="alert">{passwordError}</p>}
+                  <div>
+                    <label className="mb-2 block text-xs text-foreground">Senha atual</label>
+                    <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="••••••••" className="h-10 rounded-sm border-border bg-transparent px-3 text-xs" />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-xs text-foreground">Nova senha</label>
+                    <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="••••••••" className="h-10 rounded-sm border-border bg-transparent px-3 text-xs" />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-xs text-foreground">Confirmar nova senha</label>
+                    <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" className="h-10 rounded-sm border-border bg-transparent px-3 text-xs" />
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setPasswordError(null)
+                      setPasswordMessage(null)
+                      if (!currentPassword || !newPassword || !confirmPassword) {
+                        setPasswordError('Preencha os três campos de senha.')
+                        return
+                      }
+                      updatePasswordMutation.mutate()
+                    }}
+                    isLoading={updatePasswordMutation.isPending}
+                    className="h-10 min-w-[131px] rounded-sm px-5 text-xs font-bold"
+                  >
+                    Salvar senha
+                  </Button>
+                </div>
+                <div className="space-y-6">
+                  <div>
+                    <label htmlFor="profile-username" className="mb-2 block text-xs text-foreground">Nome de usuário<span className="text-primary">*</span></label>
+                    <Input id="profile-username" value={username} onChange={(e) => setUsername(e.target.value)} className="h-10 rounded-sm border-border bg-transparent px-3 text-xs" />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-xs text-foreground">Nome ENS<span className="text-primary">*</span></label>
+                    <div className="flex h-10 min-w-0 gap-2.5">
+                      <select value={profileEnsSuffix} onChange={(e) => setProfileEnsSuffix(e.target.value)} aria-label="Sufixo ENS do perfil" className="h-10 w-[78px] shrink-0 border border-border bg-background px-2 text-xs text-foreground outline-none focus:border-primary">
+                        <option value="eth">.eth</option>
+                      </select>
+                      <Input aria-label="Nome ENS do perfil" value={profileEnsName} onChange={(e) => setProfileEnsName(e.target.value)} className="h-10 min-w-0 flex-1 rounded-none border-border bg-transparent px-3 text-xs" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-xs text-foreground">Avatar</label>
+                    <div className="flex items-center gap-4">
+                      <img src={avatar || '/avatars/creator.svg'} alt={`Avatar de ${name}`} className="h-12 w-12 rounded-full border border-primary/60 object-cover" />
+                      <div className="flex items-center gap-3 text-xs">
+                        <button type="button" onClick={() => avatarInputRef.current?.click()} className="rounded-sm bg-primary px-4 py-2 font-semibold text-primary-foreground hover:bg-primary-hover">Alterar</button>
+                        <button type="button" onClick={() => setAvatar('/avatars/creator.svg')} className="text-foreground-muted hover:text-foreground">Remover</button>
+                      </div>
+                      <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        aria-label="Enviar arquivo de avatar"
+                        onChange={(event) => {
+                          const file = event.target.files?.[0]
+                          event.target.value = ''
+                          if (!file) return
+                          if (!file.type.startsWith('image/')) {
+                            setProfileError('Selecione um arquivo de imagem.')
+                            return
+                          }
+                          if (file.size > 1024 * 1024) {
+                            setProfileError('A imagem do avatar deve ter no máximo 1 MB.')
+                            return
+                          }
+                          const reader = new FileReader()
+                          reader.onload = () => {
+                            if (typeof reader.result === 'string') {
+                              setProfileError(null)
+                              setAvatar(reader.result)
+                            }
+                          }
+                          reader.onerror = () => setProfileError('Não foi possível ler a imagem selecionada.')
+                          reader.readAsDataURL(file)
+                        }}
+                      />
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2" aria-label="Avatares predefinidos">
+                      {['/avatars/alice.svg', '/avatars/bob.svg', '/avatars/yuga.svg', '/avatars/creator.svg'].map((av) => (
+                        <button key={av} type="button" onClick={() => setAvatar(av)} aria-label="Selecionar avatar predefinido" className={`h-8 w-8 overflow-hidden rounded-full border ${avatar === av ? 'border-primary' : 'border-border opacity-60'}`}>
+                          <img src={av} alt="" className="h-full w-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block font-medium text-foreground-muted mb-1.5">Nome Completo</label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} required />
-              </div>
-
-              <div>
-                <label className="block font-medium text-foreground-muted mb-1.5">E-mail Cadastrado</label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </div>
-
-              <Button type="submit" isLoading={updateProfileMutation.isPending} className="font-bold">
-                Salvar Alterações
+              <Button type="submit" isLoading={updateProfileMutation.isPending} className="h-10 min-w-[131px] rounded-sm px-5 text-xs font-bold">
+                Salvar
               </Button>
             </form>
           </div>
 
-          {/* Change Password Form */}
-          <div className="p-6 rounded-2xl border border-border bg-surface shadow-sm space-y-4">
-            <div className="flex items-center gap-2 font-bold text-foreground text-base">
-              <KeyRound className="w-4 h-4 text-primary" />
-              <h2>Segurança & Senha</h2>
-            </div>
-
-            {passwordMessage && (
-              <div className="p-3 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>{passwordMessage}</span>
-              </div>
-            )}
-            {passwordError && (
-              <div className="p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" />
-                <span>{passwordError}</span>
-              </div>
-            )}
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                setPasswordMessage(null)
-                setPasswordError(null)
-                updatePasswordMutation.mutate()
-              }}
-              className="space-y-4 text-xs"
-            >
-              <div>
-                <label className="block font-medium text-foreground-muted mb-1.5">Senha Atual</label>
-                <Input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block font-medium text-foreground-muted mb-1.5">Nova Senha</label>
-                <Input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Mínimo 6 caracteres"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block font-medium text-foreground-muted mb-1.5">Confirmar Nova Senha</label>
-                <Input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repita a nova senha"
-                  required
-                />
-              </div>
-
-              <Button type="submit" variant="secondary" isLoading={updatePasswordMutation.isPending} className="font-bold">
-                Alterar Senha
-              </Button>
-            </form>
-          </div>
         </div>
       )}
 
       {/* Tab: Connected Wallets */}
       {activeTab === 'wallets' && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-foreground">Carteiras Web3 Registradas</h2>
-              <p className="text-xs text-foreground-muted">Gerencie suas chaves públicas e defina a carteira preferencial.</p>
+        <div className="space-y-7">
+          <section className="space-y-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h1 className="text-base font-bold text-foreground">Carteira principal</h1>
+                <p className="mt-1 text-xs text-foreground-muted">Estas carteiras ficam disponíveis no pagamento e para receber NFTs comprados.</p>
+              </div>
+              <button aria-label="Adicionar carteira" onClick={() => setAddWalletOpen(true)} className="shrink-0 text-sm font-semibold text-primary hover:text-primary-hover">Adicionar</button>
             </div>
-            <Button onClick={() => setAddWalletOpen(true)} size="sm" className="gap-1.5 font-bold">
-              <Plus className="w-4 h-4" />
-              <span>Adicionar Carteira</span>
-            </Button>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {wallets.map((w) => (
-              <div
-                key={w.id}
-                data-testid="wallet-card"
-                className={`p-5 rounded-2xl border transition-all ${
-                  w.isPrimary
-                    ? 'border-primary bg-primary/5 shadow-md ring-1 ring-primary/40'
-                    : 'border-border bg-surface'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <strong className="text-sm font-bold text-foreground capitalize">{w.provider}</strong>
-                      {w.isPrimary && (
-                        <Badge variant="default" className="text-[10px] font-bold gap-1 py-0">
-                          <Star className="w-3 h-3 fill-primary" />
-                          Principal
-                        </Badge>
-                      )}
-                    </div>
-                    <span className="font-mono text-xs text-foreground-muted block">{w.address}</span>
-                  </div>
+            {networkError && <p className="text-xs text-red-400" role="alert">{networkError}</p>}
+            {walletProfileMessage && <p className="text-xs text-emerald-400" role="status">{walletProfileMessage}</p>}
+            {walletProfileError && <p className="text-xs text-red-400" role="alert">{walletProfileError}</p>}
 
-                  {!w.isPrimary && (
-                    <button
-                      onClick={() => removeWalletMutation.mutate(w.id)}
-                      className="text-foreground-muted hover:text-red-400 p-1"
-                      aria-label="Remover carteira"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
+            {wallets.find((wallet) => wallet.isPrimary) ? (
+              <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
+                {(() => {
+                  const primaryWallet = wallets.find((wallet) => wallet.isPrimary)!
+                  const providerName: Record<WalletProvider, string> = {
+                    metamask: 'MetaMask',
+                    coinbase: 'Coinbase Wallet',
+                    rainbow: 'Rainbow',
+                    walletconnect: 'WalletConnect',
+                  }
+                  const fieldClassName = 'h-10 rounded-sm border-border bg-transparent px-3 text-xs text-foreground'
+                  return (
+                    <>
+                      <label className="space-y-1.5 text-xs text-foreground">
+                        <span className="block">Nome de exibição<span className="text-primary">*</span></span>
+                        <Input value={user.name} readOnly className={fieldClassName} />
+                      </label>
+                      <label className="space-y-1.5 text-xs text-foreground">
+                        <span className="block">Apelido da carteira<span className="text-primary">*</span></span>
+                        <Input value={walletAlias} onChange={(event) => setWalletAlias(event.target.value)} placeholder={providerName[primaryWallet.provider]} className={fieldClassName} />
+                      </label>
+                      <label className="space-y-1.5 text-xs text-foreground">
+                        <span className="block">Rede<span className="text-primary">*</span></span>
+                        <select
+                          aria-label="Rede da carteira principal"
+                          value={primaryWallet.network}
+                          onChange={(event) => updateWalletNetworkMutation.mutate({ walletId: primaryWallet.id, network: event.target.value as NetworkId })}
+                          disabled={updateWalletNetworkMutation.isPending}
+                          className="h-10 w-full border border-border bg-background px-3 text-xs text-foreground outline-none focus:border-primary disabled:opacity-60"
+                        >
+                          <option value="mainnet">Ethereum Mainnet</option>
+                          <option value="sepolia">Sepolia Testnet</option>
+                          <option value="arbitrum">Arbitrum One</option>
+                          <option value="polygon">Polygon PoS</option>
+                        </select>
+                      </label>
+                      <label className="space-y-1.5 text-xs text-foreground">
+                        <span className="block">Nome do perfil<span className="text-primary">*</span></span>
+                        <Input value={walletProfileName} onChange={(event) => setWalletProfileName(event.target.value)} placeholder={user.name} className={fieldClassName} />
+                      </label>
+                      <label className="space-y-1.5 text-xs text-foreground">
+                        <span className="block">Endereço da carteira<span className="text-primary">*</span></span>
+                        <Input value={primaryWallet.address} readOnly className={`${fieldClassName} font-mono`} />
+                      </label>
+                      <label className="space-y-1.5 text-xs text-foreground">
+                        <span className="block">Tipo de carteira<span className="text-primary">*</span></span>
+                        <Input value={providerName[primaryWallet.provider]} readOnly className={fieldClassName} />
+                      </label>
+                      <label className="space-y-1.5 text-xs text-foreground">
+                        <span className="block">ENS ou carteira secundária (opcional)</span>
+                        <Input value={ensOrSecondary} onChange={(event) => setEnsOrSecondary(event.target.value)} placeholder="ENS ou endereço de carteira" className={fieldClassName} />
+                      </label>
+                      <label className="space-y-1.5 text-xs text-foreground">
+                        <span className="block">Código de indicação<span className="text-primary">*</span></span>
+                        <Input value={referralCode} onChange={(event) => setReferralCode(event.target.value)} className={fieldClassName} />
+                      </label>
+                      <label className="space-y-1.5 text-xs text-foreground">
+                        <span className="block">E-mail<span className="text-primary">*</span></span>
+                        <Input value={user.email} readOnly className={fieldClassName} />
+                      </label>
+                      <label className="space-y-1.5 text-xs text-foreground">
+                        <span className="block">Nome ENS<span className="text-primary">*</span></span>
+                        <div className="flex h-10 min-w-0 gap-2.5">
+                          <select value={ensSuffix} onChange={(event) => setEnsSuffix(event.target.value)} aria-label="Sufixo ENS" className="h-10 w-[78px] shrink-0 border border-border bg-background px-2 text-xs text-foreground outline-none focus:border-primary">
+                            <option value="eth">.eth</option>
+                          </select>
+                          <Input aria-label="Nome ENS" value={ensName} onChange={(event) => setEnsName(event.target.value)} className="h-10 min-w-0 flex-1 rounded-none border-border bg-transparent px-3 text-xs" />
+                        </div>
+                      </label>
+                      <div className="md:col-span-2">
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            setWalletProfileError(null)
+                            setWalletProfileMessage(null)
+                            updateWalletProfileMutation.mutate({
+                              walletId: primaryWallet.id,
+                              fields: { walletAlias, profileName: walletProfileName, ensOrSecondary, referralCode, ensName, ensSuffix },
+                            })
+                          }}
+                          isLoading={updateWalletProfileMutation.isPending}
+                          className="h-10 min-w-[131px] rounded-sm px-5 text-xs font-bold"
+                        >
+                          Salvar carteira
+                        </Button>
+                      </div>
+                    </>
+                  )
+                })()}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-xs text-foreground-muted">Você ainda não cadastrou uma carteira principal.</p>
+              </div>
+            )}
+          </section>
+
+          <section className="space-y-3 border-t border-border pt-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-base font-bold text-foreground">Carteira secundária</h2>
+                <p className="mt-1 text-xs text-foreground-muted">
+                  {wallets.some((wallet) => !wallet.isPrimary) ? 'Suas outras carteiras registradas.' : 'Você ainda não adicionou uma carteira secundária.'}
+                </p>
+              </div>
+              <button onClick={() => setAddWalletOpen(true)} className="text-xs font-semibold text-primary hover:text-primary-hover">
+                <span className="mr-2 inline-block h-3.5 w-3.5 rounded-full border border-primary align-middle" aria-hidden="true" />
+                Igual à carteira principal <span className="ml-1">Adicionar</span>
+              </button>
+            </div>
+            {wallets.filter((wallet) => !wallet.isPrimary).map((wallet) => (
+              <div key={wallet.id} data-testid="wallet-card" className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 py-3 text-xs">
+                <div className="min-w-0 space-y-1">
+                  <strong className="font-semibold text-foreground">{wallet.provider}</strong>
+                  <p className="truncate font-mono text-[11px] text-foreground-muted">{wallet.address}</p>
                 </div>
-
-                <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-xs">
-                  <div>
-                    <span className="text-foreground-muted block text-[10px]">Saldo Estimado:</span>
-                    <span className="font-mono font-bold text-primary">{formatEth(w.balanceEth)}</span>
-                  </div>
-
-                  {!w.isPrimary && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPrimaryWalletMutation.mutate(w.id)}
-                      className="text-xs h-7 px-2"
-                    >
-                      Definir como Principal
-                    </Button>
-                  )}
+                <div className="flex items-center gap-3">
+                  <Button variant="outline" size="sm" onClick={() => setPrimaryWalletMutation.mutate(wallet.id)} className="h-8 rounded-sm px-3 text-[10px]">Definir como principal</Button>
+                  <button onClick={() => removeWalletMutation.mutate(wallet.id)} className="p-1 text-foreground-muted hover:text-red-400" aria-label="Remover carteira"><Trash2 className="h-4 w-4" /></button>
                 </div>
               </div>
             ))}
-          </div>
+          </section>
 
           {/* Add Wallet Modal */}
           <Dialog open={addWalletOpen} onOpenChange={setAddWalletOpen}>

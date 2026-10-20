@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react'
+import React, { lazy, Suspense, useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { CatalogResponse, CatalogSearchParams, SortOption } from '@/types'
 import { NFTCard } from './NFTCard'
 import { NFTSkeletonCard } from '@/components/ui/Skeleton'
-import { FiltersSidebar } from './FiltersSidebar'
-import { SlidersHorizontal, AlertCircle, RefreshCw, ChevronLeft, ChevronRight, SearchX, Search } from 'lucide-react'
+import { INITIAL_NFTS } from '@/mocks/fixtures'
+import { AlertCircle, RefreshCw, ChevronLeft, ChevronRight, SearchX, Search, ArrowDownUp, SlidersHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useAuth } from '@/features/auth/AuthContext'
+
+const FiltersSidebar = lazy(() => import('./FiltersSidebar').then((module) => ({ default: module.FiltersSidebar })))
 
 interface CatalogGridProps {
   searchParams: CatalogSearchParams
@@ -17,12 +19,37 @@ interface CatalogGridProps {
 
 export const CatalogGrid: React.FC<CatalogGridProps> = ({ searchParams, onUpdateParams }) => {
   const { user } = useAuth()
+  const [isDesktop, setIsDesktop] = useState(() => window.matchMedia('(min-width: 1024px)').matches)
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
   const [mobileSearch, setMobileSearch] = useState(searchParams.search || '')
+  const [activeCatalogView, setActiveCatalogView] = useState<'all' | 'new' | 'trending' | null>(() => {
+    const sort = searchParams.sort || 'recent'
+    return sort === 'popular' ? 'trending' : sort === 'recent' ? 'all' : null
+  })
 
   useEffect(() => {
     setMobileSearch(searchParams.search || '')
   }, [searchParams.search])
+
+  useEffect(() => {
+    const desktopQuery = window.matchMedia('(min-width: 1024px)')
+    const updateViewport = () => setIsDesktop(desktopQuery.matches)
+    desktopQuery.addEventListener('change', updateViewport)
+    return () => desktopQuery.removeEventListener('change', updateViewport)
+  }, [])
+
+  useEffect(() => {
+    const sort = searchParams.sort || 'recent'
+    if (sort === 'popular') setActiveCatalogView('trending')
+    else if (sort === 'recent') setActiveCatalogView((current) => current === 'new' ? 'new' : 'all')
+    else setActiveCatalogView(null)
+  }, [searchParams.sort])
+
+  useEffect(() => {
+    const openFilters = () => setMobileFilterOpen(true)
+    window.addEventListener('kurio:open-catalog-filters', openFilters)
+    return () => window.removeEventListener('kurio:open-catalog-filters', openFilters)
+  }, [])
 
   // Query Catalog via TanStack Query
   const {
@@ -38,17 +65,47 @@ export const CatalogGrid: React.FC<CatalogGridProps> = ({ searchParams, onUpdate
       const params = new URLSearchParams()
       if (searchParams.search) params.set('search', searchParams.search)
       if (searchParams.category && searchParams.category !== 'all') params.set('category', searchParams.category)
-      if (searchParams.minPrice) params.set('minPrice', searchParams.minPrice)
-      if (searchParams.maxPrice) params.set('maxPrice', searchParams.maxPrice)
+      const normalizePrice = (value: string) => value.trim().replace(/^["']|["']$/g, '')
+      if (searchParams.minPrice) params.set('minPrice', normalizePrice(searchParams.minPrice))
+      if (searchParams.maxPrice) params.set('maxPrice', normalizePrice(searchParams.maxPrice))
       if (searchParams.status && searchParams.status !== 'all') params.set('status', searchParams.status)
       if (searchParams.sort) params.set('sort', searchParams.sort)
       params.set('page', String(searchParams.page || 1))
-      params.set('limit', String(searchParams.limit || 6))
+      params.set('limit', String(searchParams.limit || 9))
 
       const response = await api.get<CatalogResponse>(`/nfts?${params.toString()}`)
       return response.data
     },
     staleTime: 1000 * 30,
+    placeholderData: () => {
+      const hasDefaultCatalogFilters =
+        !searchParams.search &&
+        !searchParams.minPrice &&
+        !searchParams.maxPrice &&
+        (!searchParams.category || searchParams.category === 'all') &&
+        (!searchParams.status || searchParams.status === 'all') &&
+        (!searchParams.sort || searchParams.sort === 'recent') &&
+        (searchParams.page || 1) === 1
+
+      if (!hasDefaultCatalogFilters) return undefined
+
+      const items = [...INITIAL_NFTS]
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, searchParams.limit || 9)
+        .map((item) => ({ ...item, isLiked: false }))
+      const availablePrices = INITIAL_NFTS
+        .filter((item) => !item.isSoldOut && item.availableSupply > 0)
+        .map((item) => Number(item.price))
+
+      return {
+        items,
+        total: INITIAL_NFTS.length,
+        page: 1,
+        totalPages: Math.ceil(INITIAL_NFTS.length / (searchParams.limit || 9)) || 1,
+        limit: searchParams.limit || 9,
+        maxAvailablePrice: Math.max(0.02, ...availablePrices).toFixed(2),
+      }
+    },
   })
 
   const handleClearFilters = () => {
@@ -72,22 +129,27 @@ export const CatalogGrid: React.FC<CatalogGridProps> = ({ searchParams, onUpdate
   const endIdx = Math.min(page * limit, total)
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="flex gap-8">
+    <div className="max-w-[1264px] mx-auto px-6 pt-2 pb-10 lg:px-8 lg:pt-10 lg:pb-[118px]">
+      <div className="flex gap-12">
         {/* Desktop Sidebar */}
-        <FiltersSidebar
-          filters={searchParams}
-          onFilterChange={onUpdateParams}
-          onClearFilters={handleClearFilters}
-          totalCount={total}
-          isMobileDrawerOpen={mobileFilterOpen}
-          onCloseMobileDrawer={() => setMobileFilterOpen(false)}
-        />
+        {(isDesktop || mobileFilterOpen) && (
+          <Suspense fallback={isDesktop ? <div className="w-[310px] flex-shrink-0" aria-hidden="true" /> : null}>
+            <FiltersSidebar
+              filters={searchParams}
+              maxAvailablePrice={data?.maxAvailablePrice}
+              onFilterChange={onUpdateParams}
+              onClearFilters={handleClearFilters}
+              totalCount={total}
+              isMobileDrawerOpen={!isDesktop && mobileFilterOpen}
+              onCloseMobileDrawer={() => setMobileFilterOpen(false)}
+            />
+          </Suspense>
+        )}
 
         {/* Main Catalog View */}
         <div className="flex-1 min-w-0">
           {/* Mobile Quick Search Bar */}
-          <div className="lg:hidden mb-4">
+          <div className="hidden md:flex lg:hidden mb-4">
             <form
               onSubmit={(e) => {
                 e.preventDefault()
@@ -95,8 +157,11 @@ export const CatalogGrid: React.FC<CatalogGridProps> = ({ searchParams, onUpdate
               }}
               className="relative"
             >
+              <label htmlFor="catalog-inline-search" className="sr-only">Nome, coleção</label>
               <Input
+                id="catalog-inline-search"
                 type="text"
+                aria-label="Nome, coleção"
                 placeholder="Nome, coleção..."
                 value={mobileSearch}
                 onChange={(e) => setMobileSearch(e.target.value)}
@@ -113,32 +178,38 @@ export const CatalogGrid: React.FC<CatalogGridProps> = ({ searchParams, onUpdate
           </div>
 
           {/* Top Control Bar with Figma Tabs */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-6 border-b border-border">
-            <div className="flex items-center gap-3 flex-wrap">
-              {/* Mobile Filter Drawer Trigger */}
+          <div className="flex items-center justify-between gap-2 pb-2 mb-3 border-b border-border md:flex-wrap md:gap-x-2 md:gap-y-2 lg:flex-nowrap lg:gap-4 lg:pb-4 lg:mb-4">
+            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
               <button
+                type="button"
                 onClick={() => setMobileFilterOpen(true)}
-                className="lg:hidden flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-surface hover:bg-surface-secondary text-xs font-semibold text-foreground"
+                aria-label="Filtros"
+                className="hidden h-9 shrink-0 items-center gap-2 rounded-md border border-border bg-surface px-3 text-xs font-semibold text-foreground md:flex lg:hidden"
               >
-                <SlidersHorizontal className="w-4 h-4 text-primary" />
-                <span>Filtros</span>
+                <SlidersHorizontal className="h-4 w-4 text-primary" aria-hidden="true" />
+                <span className="sr-only">Filtros</span>
               </button>
 
               {/* View Tabs matching Figma */}
-              <div className="flex items-center gap-1.5 p-1 rounded-lg bg-surface border border-border">
+              <div className="flex min-w-0 items-center gap-1 sm:gap-4">
                 {[
                   { id: 'all', label: 'Todos os NFTs', sort: 'recent' },
                   { id: 'new', label: 'Novos lançamentos', sort: 'recent' },
                   { id: 'trending', label: 'Em alta', sort: 'popular' },
-                ].map((tab, idx) => {
-                  const isActive = (searchParams.sort || 'recent') === tab.sort && idx === ((searchParams.sort === 'popular') ? 2 : 0)
+                ].map((tab) => {
+                  const isActive = activeCatalogView === tab.id
                   return (
                     <button
                       key={tab.id}
-                      onClick={() => onUpdateParams({ sort: tab.sort as SortOption, page: 1 })}
-                      className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
+                      type="button"
+                      onClick={() => {
+                        setActiveCatalogView(tab.id as 'all' | 'new' | 'trending')
+                        onUpdateParams({ sort: tab.sort as SortOption, page: 1 })
+                      }}
+                      aria-pressed={isActive}
+                      className={`relative whitespace-nowrap px-1.5 py-1 text-xs sm:px-3 sm:text-sm font-bold transition-all ${
                         isActive
-                          ? 'bg-primary text-black shadow-sm'
+                          ? "text-primary after:absolute after:inset-x-1 after:bottom-0 after:h-0.5 after:bg-primary after:content-['']"
                           : 'text-foreground-muted hover:text-foreground'
                       }`}
                     >
@@ -148,34 +219,35 @@ export const CatalogGrid: React.FC<CatalogGridProps> = ({ searchParams, onUpdate
                 })}
               </div>
 
-              <p className="hidden xl:block text-xs text-foreground-muted">
+              <p className="sr-only">
                 Exibindo <strong className="text-foreground">{startIdx} - {endIdx}</strong> de{' '}
                 <strong className="text-foreground">{total}</strong> obras
               </p>
             </div>
 
             {/* Sort Dropdown */}
-            <div className="flex items-center gap-2 self-end sm:self-auto">
-              <label htmlFor="sort-select" className="text-xs text-foreground-muted whitespace-nowrap">
+            <div className="relative flex shrink-0 items-center gap-2 self-auto">
+              <label htmlFor="sort-select" className="sr-only lg:not-sr-only lg:text-xs lg:text-foreground-muted lg:whitespace-nowrap">
                 Ordenar por:
               </label>
               <select
                 id="sort-select"
                 value={searchParams.sort || 'recent'}
                 onChange={(e) => onUpdateParams({ sort: e.target.value as SortOption, page: 1 })}
-                className="h-9 rounded-md border border-border bg-surface px-3 text-xs text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-8 w-8 appearance-none overflow-hidden rounded-md border-0 bg-transparent px-0 text-transparent sm:h-9 sm:w-[170px] sm:appearance-auto sm:border sm:bg-surface sm:px-3 sm:text-xs sm:text-foreground lg:w-auto font-medium focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="recent">Listados recentemente</option>
                 <option value="price_asc">Menor Preço (ETH)</option>
                 <option value="price_desc">Maior Preço (ETH)</option>
                 <option value="popular">Em alta</option>
               </select>
+              <ArrowDownUp className="pointer-events-none absolute right-4 h-3.5 w-3.5 text-foreground-muted sm:hidden" aria-hidden="true" />
             </div>
           </div>
 
           {/* Loading Skeletons */}
           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6" aria-busy="true">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6" aria-busy="true">
               {Array.from({ length: 6 }).map((_, i) => (
                 <NFTSkeletonCard key={i} />
               ))}
@@ -216,9 +288,9 @@ export const CatalogGrid: React.FC<CatalogGridProps> = ({ searchParams, onUpdate
           ) : (
             /* NFT Cards Grid */
             <>
-              <div id="catalog-grid" data-testid="catalog-grid" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {items.map((nft) => (
-                  <NFTCard key={nft.id} nft={nft} />
+              <div id="catalog-grid" data-testid="catalog-grid" className="grid grid-cols-2 lg:grid-cols-3 gap-x-3 gap-y-3 sm:gap-x-6 sm:gap-y-6 lg:gap-y-[52px]">
+                {items.map((nft, index) => (
+                  <NFTCard key={nft.id} nft={nft} priority={index === 0} />
                 ))}
               </div>
 
@@ -237,7 +309,7 @@ export const CatalogGrid: React.FC<CatalogGridProps> = ({ searchParams, onUpdate
                     className="gap-1 px-3"
                   >
                     <ChevronLeft className="w-4 h-4" />
-                    <span className="hidden sm:inline">Anterior</span>
+                    <span className="hidden">Anterior</span>
                   </Button>
 
                   <div className="flex items-center gap-1">
@@ -247,7 +319,7 @@ export const CatalogGrid: React.FC<CatalogGridProps> = ({ searchParams, onUpdate
                         onClick={() => onUpdateParams({ page: p })}
                         disabled={isFetching}
                         aria-current={p === page ? 'page' : undefined}
-                        className={`w-9 h-9 rounded-md text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+                        className={`w-8 h-8 rounded-md text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
                           p === page
                             ? 'bg-primary text-primary-foreground font-bold shadow-sm'
                             : 'bg-surface text-foreground hover:bg-surface-secondary border border-border'
@@ -266,7 +338,7 @@ export const CatalogGrid: React.FC<CatalogGridProps> = ({ searchParams, onUpdate
                     aria-label="Próxima página"
                     className="gap-1 px-3"
                   >
-                    <span className="hidden sm:inline">Próxima</span>
+                    <span className="hidden">Próxima</span>
                     <ChevronRight className="w-4 h-4" />
                   </Button>
                 </nav>

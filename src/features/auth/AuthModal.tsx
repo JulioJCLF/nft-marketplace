@@ -157,8 +157,9 @@ export const AuthModal: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-4 pt-1">
           {authModalMode === 'register' && (
             <div>
-              <label className="block text-xs font-medium text-foreground-muted mb-1.5">Nome Completo</label>
+              <label htmlFor="auth-name" className="block text-xs font-medium text-foreground-muted mb-1.5">Nome Completo</label>
               <Input
+                id="auth-name"
                 type="text"
                 placeholder="Seu nome"
                 value={name}
@@ -169,8 +170,9 @@ export const AuthModal: React.FC = () => {
           )}
 
           <div>
-            <label className="block text-xs font-medium text-foreground-muted mb-1.5">E-mail</label>
+            <label htmlFor="auth-email" className="block text-xs font-medium text-foreground-muted mb-1.5">E-mail</label>
             <Input
+              id="auth-email"
               type="email"
               placeholder="seu@email.com"
               value={email}
@@ -180,8 +182,9 @@ export const AuthModal: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-foreground-muted mb-1.5">Senha</label>
+            <label htmlFor="auth-password" className="block text-xs font-medium text-foreground-muted mb-1.5">Senha</label>
             <Input
+              id="auth-password"
               type="password"
               placeholder="••••••••"
               value={password}
@@ -194,6 +197,37 @@ export const AuthModal: React.FC = () => {
             {authModalMode === 'login' ? 'Conectar' : 'Criar Conta'}
           </Button>
         </form>
+
+        <div className="space-y-3 pt-1">
+            <div className="flex items-center gap-3 text-[11px] text-foreground-muted">
+              <span className="h-px flex-1 bg-border" />
+              <span>Ou continue com</span>
+              <span className="h-px flex-1 bg-border" />
+            </div>
+            <button
+              type="button"
+              onClick={() => setErrorMessage(`${authModalMode === 'register' ? 'O cadastro' : 'O login'} com Google ainda não está disponível.`)}
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-border bg-transparent text-xs font-semibold text-foreground-muted transition-colors hover:border-primary/60 hover:text-foreground"
+            >
+              <svg viewBox="0 0 48 48" className="h-4 w-4" aria-hidden="true">
+                <path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.8 6.1-15Z" />
+                <path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.6-5.1c-1.8 1.2-4.1 2-6.9 2-5.3 0-9.8-3.6-11.4-8.4H5.8v5.2A20 20 0 0 0 24 44Z" />
+                <path fill="#FBBC05" d="M12.6 27.7a12 12 0 0 1 0-7.4v-5.2H5.8a20 20 0 0 0 0 17.8l6.8-5.2Z" />
+                <path fill="#EA4335" d="M24 11.9c3 0 5.7 1 7.8 3.1l5.8-5.8A19.4 19.4 0 0 0 24 4 20 20 0 0 0 5.8 15.1l6.8 5.2c1.6-4.8 6.1-8.4 11.4-8.4Z" />
+              </svg>
+              Continuar com Google
+            </button>
+            <button
+              type="button"
+              onClick={() => setErrorMessage(`${authModalMode === 'register' ? 'O cadastro' : 'O login'} com Facebook ainda não está disponível.`)}
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-border bg-transparent text-xs font-semibold text-foreground-muted transition-colors hover:border-primary/60 hover:text-foreground"
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4 fill-[#4267B2]" aria-hidden="true">
+                <path d="M13.5 21v-8.2h2.8l.4-3.2h-3.2v-2c0-.9.3-1.6 1.6-1.6h1.7V3.1c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.3H7.3v3.2h2.8V21h3.4Z" />
+              </svg>
+              Continuar com Facebook
+            </button>
+        </div>
       </DialogContent>
     </Dialog>
   )

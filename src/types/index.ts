@@ -1,4 +1,14 @@
-export type CategoryType = 'all' | 'art' | 'collectibles' | 'music' | 'gaming' | 'metaverse'
+export type CategoryType =
+  | 'all'
+  | 'art'
+  | 'photography'
+  | 'music'
+  | 'metaverse'
+  | 'collectibles'
+  | 'generative'
+  | 'gaming'
+  | 'subscriptions'
+  | 'utility'
 
 export interface NFTCreator {
   name: string
@@ -22,6 +32,13 @@ export interface NFTHistoryItem {
   txHash: string
 }
 
+export interface NFTReview {
+  author: string
+  rating: number
+  comment: string
+  isMock: boolean
+}
+
 export interface NFT {
   id: string
   name: string
@@ -29,7 +46,6 @@ export interface NFT {
   collection: string
   creator: NFTCreator
   price: string // ETH string with 4 decimal places
-  originalPrice?: string
   image: string
   gallery?: string[]
   edition: string
@@ -38,6 +54,9 @@ export interface NFT {
   isSoldOut: boolean
   category: CategoryType
   likes: number
+  rating?: number
+  reviewCount?: number
+  reviews?: NFTReview[]
   isLiked?: boolean
   traits: NFTTrait[]
   history: NFTHistoryItem[]
@@ -66,6 +85,7 @@ export interface CatalogResponse {
   page: number
   totalPages: number
   limit: number
+  maxAvailablePrice: string
 }
 
 export interface CartItem {
@@ -112,8 +132,12 @@ export interface OrderQuote {
 export interface User {
   id: string
   name: string
+  username?: string
   email: string
   avatar: string
+  walletAlias?: string
+  ensName?: string
+  ensSuffix?: string
   createdAt: string
 }
 
@@ -128,6 +152,12 @@ export interface Wallet {
   network: NetworkId
   isPrimary: boolean
   balanceEth: string
+  walletAlias?: string
+  profileName?: string
+  ensOrSecondary?: string
+  referralCode?: string
+  ensName?: string
+  ensSuffix?: string
   createdAt: string
 }
 
@@ -158,6 +188,7 @@ export interface OrderReceipt {
   txHash: string
   status: OrderStatus
   createdAt: string
+  updatedAt?: string
   confirmedAt?: string
   version: number
 }
@@ -187,6 +218,7 @@ export interface OrderUpdatedEvent {
   id: string // event ID
   version: number
   orderId: string
+  userId: string
   status: OrderStatus
   txHash: string
   updatedAt: string

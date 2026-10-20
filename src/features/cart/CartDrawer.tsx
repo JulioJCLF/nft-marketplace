@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag, AlertCircle } from 'lucide-react'
+import { X, Trash2, Plus, Minus, ShoppingCart, ArrowRight, Tag, AlertCircle } from 'lucide-react'
 import { useCart } from './CartContext'
 import { useAuth } from '@/features/auth/AuthContext'
 import { Button } from '@/components/ui/Button'
@@ -56,24 +56,27 @@ export const CartDrawer: React.FC = () => {
     <div className="fixed inset-0 z-50 overflow-hidden" role="dialog" aria-modal="true" aria-label="Carrinho de compras">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 hidden bg-black/75 backdrop-blur-md transition-opacity sm:block"
         onClick={() => setIsCartDrawerOpen(false)}
         aria-hidden="true"
       />
 
-      <div className="fixed inset-y-0 right-0 flex max-w-full pl-10">
-        <div className="w-screen max-w-md bg-surface border-l border-border flex flex-col shadow-2xl">
+      <div className="fixed inset-0 flex max-w-full sm:inset-y-0 sm:left-auto sm:right-0 sm:pl-10">
+        <div className="flex h-[100dvh] w-full flex-col bg-background sm:h-auto sm:w-screen sm:max-w-[460px] sm:border-l sm:border-border/80 sm:shadow-[-24px_0_80px_rgba(0,0,0,0.55)]">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-5 border-b border-border">
+          <div className="flex items-center justify-between px-5 py-4 sm:px-6 sm:py-5 border-b border-border/80 bg-surface/70">
             <div className="flex items-center gap-3">
-              <ShoppingBag className="w-5 h-5 text-primary" />
-              <h2 className="text-lg font-bold text-foreground">
-                Carrinho ({itemCount} {itemCount === 1 ? 'item' : 'itens'})
-              </h2>
+              <div className="flex h-10 w-10 items-center justify-center rounded-full border border-primary/25 bg-primary/10">
+                <ShoppingCart className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-foreground sm:text-lg">Carrinho de compras</h2>
+                <p className="mt-0.5 text-[11px] text-foreground-muted">{itemCount} {itemCount === 1 ? 'item' : 'itens'} selecionados</p>
+              </div>
             </div>
             <button
               onClick={() => setIsCartDrawerOpen(false)}
-              className="rounded-md p-1.5 text-foreground-muted hover:text-foreground hover:bg-surface-secondary focus:outline-none focus:ring-2 focus:ring-primary"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-foreground-muted transition-colors hover:border-primary/50 hover:bg-surface-secondary hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               aria-label="Fechar carrinho"
             >
               <X className="w-5 h-5" />
@@ -81,11 +84,11 @@ export const CartDrawer: React.FC = () => {
           </div>
 
           {/* Cart Items List */}
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6 sm:py-6 space-y-3">
             {items.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
-                <div className="w-16 h-16 rounded-full bg-surface-secondary flex items-center justify-center text-foreground-muted">
-                  <ShoppingBag className="w-8 h-8 opacity-40" />
+                <div className="w-16 h-16 rounded-full border border-primary/20 bg-primary/10 flex items-center justify-center text-primary">
+                  <ShoppingCart className="w-8 h-8 opacity-40" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground text-base">Seu carrinho está vazio</h3>
@@ -97,7 +100,7 @@ export const CartDrawer: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => setIsCartDrawerOpen(false)}
-                  className="mt-2"
+                  className="mt-2 rounded-full border-primary/50 px-5"
                 >
                   Explorar Catálogo
                 </Button>
@@ -106,55 +109,55 @@ export const CartDrawer: React.FC = () => {
               items.map((item) => (
                 <div
                   key={item.nftId}
-                  className="flex gap-4 p-3 rounded-lg border border-border bg-surface-secondary/50 hover:border-border-light transition-colors"
+                  className="flex gap-3 rounded-2xl border border-border/80 bg-surface/80 p-3 transition-colors hover:border-primary/35 sm:gap-4 sm:p-4"
                 >
                   <img
                     src={item.nft.image}
                     alt={item.nft.name}
-                    className="w-20 h-20 rounded-md object-cover bg-surface-tertiary flex-shrink-0"
+                    className="h-20 w-20 shrink-0 rounded-xl border border-border/70 bg-surface-tertiary object-cover sm:h-24 sm:w-24"
                   />
                   <div className="flex-1 flex flex-col justify-between min-w-0">
-                    <div className="flex justify-between items-start gap-2">
+                    <div className="flex items-start justify-between gap-2">
                       <div className="truncate">
-                        <h4 className="font-bold text-sm text-foreground truncate">{item.nft.name}</h4>
-                        <p className="text-xs text-foreground-muted truncate">{item.nft.collection}</p>
+                        <h4 className="block truncate text-sm font-bold text-foreground sm:text-[15px]">{item.nft.name}</h4>
+                        <p className="mt-1 block truncate text-[11px] text-foreground-muted">{item.nft.collection}</p>
                       </div>
                       <button
                         onClick={() => removeFromCart(item.nftId)}
-                        className="text-foreground-muted hover:text-red-400 p-1 rounded transition-colors"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-foreground-subtle transition-colors hover:bg-red-500/10 hover:text-red-400"
                         aria-label={`Remover ${item.nft.name} do carrinho`}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
 
-                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/40">
+                    <div className="mt-3 flex items-end justify-between gap-2 border-t border-border/50 pt-3">
                       <div>
-                        <span className="font-mono font-bold text-sm text-primary">
+                        <span className="font-mono text-sm font-bold text-primary sm:text-base">
                           {formatEth(item.nft.price)}
                         </span>
-                        <div className="text-[10px] text-foreground-muted">
+                        <div className="mt-1 text-[10px] text-foreground-muted">
                           {formatUsdEquivalent(item.nft.price)}
                         </div>
                       </div>
 
                       {/* Quantity Controls */}
-                      <div className="flex items-center border border-border rounded-md bg-surface">
+                      <div className="flex h-9 items-center rounded-full border border-border bg-background/80">
                         <button
                           onClick={() => updateQuantity(item.nftId, item.quantity - 1)}
                           disabled={item.quantity <= 1}
-                          className="px-2 py-1 text-foreground-muted hover:text-foreground disabled:opacity-30"
+                          className="flex h-8 w-8 items-center justify-center rounded-full text-foreground-muted transition-colors hover:text-primary disabled:opacity-30"
                           aria-label="Diminuir quantidade"
                         >
                           <Minus className="w-3.5 h-3.5" />
                         </button>
-                        <span className="px-2 text-xs font-semibold text-foreground min-w-[20px] text-center">
+                        <span className="min-w-[24px] px-1 text-center font-mono text-xs font-semibold text-foreground">
                           {item.quantity}
                         </span>
                         <button
                           onClick={() => updateQuantity(item.nftId, item.quantity + 1)}
                           disabled={item.quantity >= item.nft.availableSupply}
-                          className="px-2 py-1 text-foreground-muted hover:text-foreground disabled:opacity-30"
+                          className="flex h-8 w-8 items-center justify-center rounded-full text-foreground-muted transition-colors hover:text-primary disabled:opacity-30"
                           aria-label="Aumentar quantidade"
                         >
                           <Plus className="w-3.5 h-3.5" />
@@ -169,9 +172,9 @@ export const CartDrawer: React.FC = () => {
 
           {/* Footer with Calculations and Checkout */}
           {items.length > 0 && (
-            <div className="p-6 border-t border-border bg-surface-secondary/30 space-y-4">
+            <div className="space-y-4 border-t border-border/80 bg-surface/95 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-6">
               {/* Coupon Form */}
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {couponCode ? (
                   <div className="flex items-center justify-between p-2 rounded-md bg-primary/10 border border-primary/30 text-xs">
                     <div className="flex items-center gap-2">
@@ -193,7 +196,7 @@ export const CartDrawer: React.FC = () => {
                       placeholder="Cupom (ex: DESC10)"
                       value={couponInput}
                       onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                      className="flex-1 h-9 rounded-md border border-border bg-surface px-3 text-xs text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-primary uppercase font-mono"
+                      className="h-10 min-w-0 flex-1 rounded-full border border-border bg-background px-4 text-xs font-mono uppercase text-foreground placeholder:text-foreground-muted focus:border-primary/70 focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                     <Button type="submit" size="sm" variant="outline" isLoading={isApplyingCoupon}>
                       Aplicar
@@ -211,7 +214,7 @@ export const CartDrawer: React.FC = () => {
               </div>
 
               {/* Price Breakdown */}
-              <div className="space-y-2 text-xs border-t border-border/40 pt-3">
+              <div className="space-y-3 border-t border-border/60 pt-4 text-xs">
                 <div className="flex justify-between text-foreground-muted">
                   <span>Subtotal</span>
                   <span className="font-mono">{formatEth(subtotalEth)}</span>
@@ -226,10 +229,10 @@ export const CartDrawer: React.FC = () => {
                   <span>Taxa de rede estimada (Gás)</span>
                   <span className="font-mono">{formatEth(gasFeeEth)}</span>
                 </div>
-                <div className="flex justify-between items-baseline pt-2 border-t border-border font-bold text-sm text-foreground">
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/20 bg-background/70 p-4 font-bold text-foreground">
                   <span>Total</span>
                   <div className="text-right">
-                    <div className="font-mono text-base text-primary">{formatEth(totalEth)}</div>
+                    <div className="font-mono text-lg font-bold text-primary">{formatEth(totalEth)}</div>
                     <div className="text-[11px] text-foreground-muted font-normal">
                       ≈ {formatUsdEquivalent(totalEth)}
                     </div>
@@ -238,18 +241,18 @@ export const CartDrawer: React.FC = () => {
               </div>
 
               {/* Checkout & View Cart CTAs */}
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2">
                 <Button
                   variant="outline"
                   onClick={() => {
                     setIsCartDrawerOpen(false)
                     navigate({ to: '/cart' })
                   }}
-                  className="flex-1 font-bold text-xs"
+                  className="h-10 w-full rounded-full border-border/80 font-semibold text-xs"
                 >
                   Ver Carrinho Completo
                 </Button>
-                <Button onClick={handleCheckout} className="flex-1 gap-2 font-bold" size="default">
+                <Button onClick={handleCheckout} className="h-12 w-full gap-2 rounded-full font-bold" size="default">
                   <span>Finalizar Compra</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>

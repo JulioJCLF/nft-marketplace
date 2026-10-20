@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import { mockDB } from '../db'
 import { requireAuth, handleScenarioOverride } from './helper'
-import { WalletProvider, NetworkId } from '@/types'
+import { WalletProvider, NetworkId, Wallet } from '@/types'
 
 export const profileHandlers = [
   // GET /api/profile
@@ -23,7 +23,15 @@ export const profileHandlers = [
     const { errorResponse, user } = requireAuth(request)
     if (errorResponse) return errorResponse
 
-    const body = (await request.json()) as { name?: string; email?: string; avatar?: string }
+    const body = (await request.json()) as {
+      name?: string
+      username?: string
+      email?: string
+      avatar?: string
+      walletAlias?: string
+      ensName?: string
+      ensSuffix?: string
+    }
     const updated = mockDB.updateUser(user.id, body)
 
     return HttpResponse.json({ user: updated, message: 'Perfil atualizado com sucesso!' })
@@ -145,6 +153,58 @@ export const profileHandlers = [
     }
 
     return HttpResponse.json({ success: true, message: 'Carteira principal definida com sucesso.' })
+  }),
+
+  // PUT /api/wallets/:id/network
+  http.put('/api/wallets/:id/network', async ({ request, params }) => {
+    const override = handleScenarioOverride(request)
+    if (override) return override
+
+    const { errorResponse, user } = requireAuth(request)
+    if (errorResponse) return errorResponse
+
+    const { id } = params as { id: string }
+    const body = (await request.json()) as { network?: NetworkId }
+    const networks: NetworkId[] = ['mainnet', 'sepolia', 'arbitrum', 'polygon']
+
+    if (!body.network || !networks.includes(body.network)) {
+      return HttpResponse.json(
+        { message: 'Rede inválida.', code: 'INVALID_NETWORK' },
+        { status: 400 }
+      )
+    }
+
+    const success = mockDB.updateWalletNetwork(user.id, id, body.network)
+    if (!success) {
+      return HttpResponse.json(
+        { message: 'Carteira não encontrada.', code: 'WALLET_NOT_FOUND' },
+        { status: 404 }
+      )
+    }
+
+    return HttpResponse.json({ success: true, message: 'Rede da carteira atualizada com sucesso.' })
+  }),
+
+  // PUT /api/wallets/:id/profile
+  http.put('/api/wallets/:id/profile', async ({ request, params }) => {
+    const override = handleScenarioOverride(request)
+    if (override) return override
+
+    const { errorResponse, user } = requireAuth(request)
+    if (errorResponse) return errorResponse
+
+    const { id } = params as { id: string }
+    const body = (await request.json()) as Pick<Wallet, 'walletAlias' | 'profileName' | 'ensOrSecondary' | 'referralCode' | 'ensName' | 'ensSuffix'>
+    const success = mockDB.updateWalletProfile(user.id, id, body)
+
+    if (!success) {
+      return HttpResponse.json(
+        { message: 'Carteira não encontrada.', code: 'WALLET_NOT_FOUND' },
+        { status: 404 }
+      )
+    }
+
+    return HttpResponse.json({ success: true, message: 'Dados da carteira atualizados com sucesso.' })
   }),
 
   // DELETE /api/wallets/:id

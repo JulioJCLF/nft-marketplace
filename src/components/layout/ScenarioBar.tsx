@@ -4,8 +4,10 @@ import { api } from '@/lib/api'
 import { useAuth } from '@/features/auth/AuthContext'
 import { useRealtime } from '@/realtime/RealtimeContext'
 import { useQueryClient } from '@tanstack/react-query'
+import { useRouterState } from '@tanstack/react-router'
 
 export const ScenarioBar: React.FC = () => {
+  const isNFTDetailsPage = useRouterState({ select: (state) => state.location.pathname.startsWith('/nft/') })
   const { user, login, logout } = useAuth()
   const { isConnected, priceAlerts, dismissPriceAlert, eventsHistory } = useRealtime()
   const queryClient = useQueryClient()
@@ -106,7 +108,7 @@ export const ScenarioBar: React.FC = () => {
               <span>
                 <strong>Atenção em Tempo Real:</strong> O preço de{' '}
                 <span className="font-bold">{priceAlerts[0].nftName}</span> foi alterado de{' '}
-                <span className="line-through">{priceAlerts[0].oldPrice} ETH</span> para{' '}
+                <span>{priceAlerts[0].oldPrice} ETH</span> para{' '}
                 <span className="font-bold text-amber-300">{priceAlerts[0].newPrice} ETH</span>.
                 Cotações abertas exigem revisão antes da confirmação.
               </span>
@@ -121,24 +123,25 @@ export const ScenarioBar: React.FC = () => {
         </div>
       )}
 
-      {/* Scenario Controller Drawer / Bar */}
-      <div className="bg-surface-secondary border-b border-border text-xs text-foreground-muted">
-        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between flex-wrap gap-2">
+      {/* Scenario Controller Floating Dock (Desktop: Floating Bottom-Right; Mobile: Normal Header Flow) */}
+      <aside aria-label="Controles do Desenvolvedor e Cenários MSW" className={`${isNFTDetailsPage ? 'hidden' : ''} fixed top-0 right-2 z-50 flex w-[calc(100vw-16px)] flex-col items-end text-xs text-foreground-muted md:bottom-4 md:top-auto md:right-4 md:w-auto md:flex-col-reverse`}>
+        <div className="flex items-center justify-between flex-wrap gap-2 bg-surface/95 backdrop-blur-md border border-border rounded-full px-1.5 py-1.5 shadow-2xl max-md:border-0 max-md:bg-transparent max-md:p-0 max-md:shadow-none md:px-3">
           {/* Left status items */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="flex items-center gap-1.5 font-bold text-foreground hover:text-primary transition-colors"
+              className="flex h-5 w-5 items-center justify-center gap-1.5 rounded-full font-bold text-xs text-foreground hover:text-primary transition-colors focus:outline-none md:h-auto md:w-auto md:rounded-none"
               aria-expanded={isOpen}
+              aria-label="Simulador de Cenários MSW"
             >
-              <Zap className="w-3.5 h-3.5 text-primary" />
-              <span>Simulador de Cenários MSW</span>
-              {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              <Zap className="h-3 w-3 text-primary md:h-3.5 md:w-3.5" />
+              <span className="sr-only md:not-sr-only">Simulador de Cenários MSW</span>
+              {isOpen ? <ChevronDown className="hidden md:block w-3.5 h-3.5" /> : <ChevronUp className="hidden md:block w-3.5 h-3.5" />}
             </button>
 
             {/* Socket.IO Connection Pill */}
             <div
-              className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${
+              className={`${isOpen ? 'flex' : 'hidden'} items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
                 isConnected
                   ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                   : 'bg-red-500/15 text-red-400 border border-red-500/30'
@@ -146,43 +149,49 @@ export const ScenarioBar: React.FC = () => {
               title={isConnected ? 'Socket.IO conectado' : 'Socket.IO desconectado'}
             >
               {isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-              <span>{isConnected ? 'Socket.IO Conectado' : 'Reconectando...'}</span>
-            </div>
-
-            {/* Active User Indicator */}
-            <div className="hidden sm:flex items-center gap-1 text-[11px]">
-              <UserCheck className="w-3 h-3 text-primary" />
-              <span>Usuário:</span>
-              <strong className="text-foreground">{user ? user.name : 'Visitante'}</strong>
+              <span className="hidden md:inline">{isConnected ? 'Socket.IO Conectado' : 'Reconectando...'}</span>
             </div>
           </div>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-2">
+          <div className={`${isOpen ? 'flex' : 'hidden'} items-center gap-1 pl-1 border-l border-border/60`}>
             <button
               onClick={handleRunMandatoryScenario}
-              className="flex items-center gap-1.5 px-3 py-1 rounded bg-primary text-primary-foreground font-bold text-[11px] hover:bg-primary/90 shadow-sm transition-all"
+              className="flex items-center gap-1 px-2 py-0.5 rounded bg-primary text-primary-foreground font-bold text-[10px] hover:bg-primary/90 shadow-sm transition-all"
               title="Executa automaticamente o cenário do desafio: Login -> Adiciona BAYC #7090 -> Checkout -> Altera Preço via Socket.IO -> Bloqueia Pagamento"
             >
-              <Zap className="w-3.5 h-3.5" />
-              <span>⚡ Testar Cenário Obrigatório</span>
+              <Zap className="w-3 h-3" />
+              <span className="hidden md:inline">Testar Cenário</span>
             </button>
 
             <button
               onClick={handleReset}
               disabled={isResetting}
-              className="flex items-center gap-1 px-2.5 py-1 rounded bg-surface hover:bg-surface-tertiary border border-border text-[11px] text-foreground hover:border-primary transition-all disabled:opacity-50"
+              className="flex items-center gap-1 p-1 sm:px-2 sm:py-0.5 rounded bg-surface hover:bg-surface-tertiary border border-border text-[10px] text-foreground hover:border-primary transition-all disabled:opacity-50"
               title="Restaura os dados e fixtures padrão da demonstração"
+              aria-label="Resetar Mocks"
             >
               <RotateCcw className={`w-3 h-3 ${isResetting ? 'animate-spin' : ''}`} />
-              <span>Resetar Mocks</span>
+              <span className="hidden md:inline">Resetar</span>
             </button>
           </div>
         </div>
 
-        {/* Collapsed Details Section */}
+        {/* Collapsed/Expanded Details Section in Floating Popover */}
         {isOpen && (
-          <div className="border-t border-border/60 bg-surface/80 px-4 py-3 space-y-3">
+          <div className="mb-2 w-full md:w-[540px] md:max-w-[calc(100vw-2rem)] md:rounded-2xl border-b md:border border-border bg-surface-secondary md:shadow-2xl p-4 text-xs text-foreground-muted animate-in fade-in-50 zoom-in-95 max-h-[75vh] overflow-y-auto space-y-3">
+            <div className="flex items-center justify-between border-b border-border/40 pb-2">
+              <div className="flex items-center gap-1.5 font-bold text-foreground">
+                <Zap className="w-3.5 h-3.5 text-primary" />
+                <span>Simulador de Cenários MSW</span>
+              </div>
+              <div className="flex items-center gap-1 text-[11px]">
+                <UserCheck className="w-3 h-3 text-primary" />
+                <span>Usuário:</span>
+                <strong className="text-foreground">{user ? user.name : 'Visitante'}</strong>
+              </div>
+            </div>
+
             {/* Tab Navigation */}
             <div className="max-w-7xl mx-auto flex items-center gap-2 border-b border-border/40 pb-2">
               <button
@@ -239,6 +248,7 @@ export const ScenarioBar: React.FC = () => {
                     <option value="500_error">Falha de Servidor (500 Error)</option>
                     <option value="401_expired">Sessão Expirada (401 Unauthorized)</option>
                     <option value="payment_failed">Falha de Pagamento (402 Recusado)</option>
+                    <option value="order_pending">Pedido Pendente (aguarda Socket.IO)</option>
                     <option value="order_timeout">Timeout de Pedido (504 Gateway)</option>
                     <option value="favorite_fail">Erro ao Favoritar (500)</option>
                   </select>
@@ -387,7 +397,7 @@ export const ScenarioBar: React.FC = () => {
             )}
           </div>
         )}
-      </div>
+      </aside>
     </>
   )
 }

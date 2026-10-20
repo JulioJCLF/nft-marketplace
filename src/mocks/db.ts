@@ -50,7 +50,27 @@ class MockDatabase {
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
-        return JSON.parse(saved)
+        const state = JSON.parse(saved) as MockDBState
+        const fixtureById = new Map(INITIAL_NFTS.map((nft) => [nft.id, nft]))
+        let enrichedNFTMetadata = false
+
+        state.nfts = state.nfts.map((nft) => {
+          const fixture = fixtureById.get(nft.id)
+          if (!fixture) return nft
+
+          const hasDemoReviews = nft.id === fixture.id && fixture.reviews?.some((review) => review.isMock)
+          const rating = hasDemoReviews ? fixture.rating : (nft.rating ?? fixture.rating)
+          const reviewCount = hasDemoReviews ? fixture.reviewCount : (nft.reviewCount ?? fixture.reviewCount)
+          const reviews = nft.reviews ?? fixture.reviews
+          if (rating === nft.rating && reviewCount === nft.reviewCount && reviews === nft.reviews) return nft
+
+          enrichedNFTMetadata = true
+          return { ...nft, rating, reviewCount, reviews }
+        })
+
+        // Upgrade newly introduced display metadata without resetting user data or mock state.
+        if (enrichedNFTMetadata) localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+        return state
       }
     } catch {
       // ignore
@@ -113,6 +133,11 @@ class MockDatabase {
 
   // NFTs Catalog
   public getNFTs(params: CatalogSearchParams, currentUserId?: string): CatalogResponse {
+    const availableNFTs = this.state.nfts.filter((nft) => !nft.isSoldOut && nft.availableSupply > 0)
+    const maxAvailablePrice = availableNFTs.reduce((max, nft) => {
+      const price = toDecimal(nft.price)
+      return price.greaterThan(max) ? price : max
+    }, toDecimal('0.02')).toFixed(2)
     let items = [...this.state.nfts]
 
     // User favorites enrichment
@@ -178,7 +203,7 @@ class MockDatabase {
     })
 
     const page = Math.max(1, params.page || 1)
-    const limit = Math.max(1, params.limit || 6)
+    const limit = Math.max(1, params.limit || 9)
     const total = items.length
     const totalPages = Math.ceil(total / limit) || 1
     const offset = (page - 1) * limit
@@ -190,6 +215,7 @@ class MockDatabase {
       page,
       totalPages,
       limit,
+      maxAvailablePrice,
     }
   }
 
@@ -290,13 +316,17 @@ class MockDatabase {
     return clean
   }
 
-  public updateUser(userId: string, data: Partial<Pick<User, 'name' | 'email' | 'avatar'>>): User | null {
+  public updateUser(userId: string, data: Partial<Pick<User, 'name' | 'username' | 'email' | 'avatar' | 'walletAlias' | 'ensName' | 'ensSuffix'>>): User | null {
     const user = this.state.users.find((u) => u.id === userId)
     if (!user) return null
 
     if (data.name) user.name = data.name
     if (data.email) user.email = data.email
     if (data.avatar) user.avatar = data.avatar
+    if (data.username !== undefined) user.username = data.username
+    if (data.walletAlias !== undefined) user.walletAlias = data.walletAlias
+    if (data.ensName !== undefined) user.ensName = data.ensName
+    if (data.ensSuffix !== undefined) user.ensSuffix = data.ensSuffix
 
     this.persist()
     const { passwordHash: _, ...clean } = user
@@ -347,6 +377,28 @@ class MockDatabase {
     if (!target) return false
 
     userWallets.forEach((w) => (w.isPrimary = w.id === walletId))
+    this.persist()
+    return true
+  }
+
+  public updateWalletNetwork(userId: string, walletId: string, network: Wallet['network']): boolean {
+    const wallet = this.state.wallets.find((item) => item.userId === userId && item.id === walletId)
+    if (!wallet) return false
+
+    wallet.network = network
+    this.persist()
+    return true
+  }
+
+  public updateWalletProfile(
+    userId: string,
+    walletId: string,
+    data: Pick<Wallet, 'walletAlias' | 'profileName' | 'ensOrSecondary' | 'referralCode' | 'ensName' | 'ensSuffix'>
+  ): boolean {
+    const wallet = this.state.wallets.find((item) => item.userId === userId && item.id === walletId)
+    if (!wallet) return false
+
+    Object.assign(wallet, data)
     this.persist()
     return true
   }
@@ -553,7 +605,7 @@ class MockDatabase {
         nftId: qi.nftId,
         name: qi.name,
         collection: nft?.collection || 'Bored Ape Yacht Club',
-        image: nft?.image || '/nfts/figma/img4_8459.png',
+        image: nft?.image || '/nfts/figma/img4_8459.avif',
         quantity: qi.quantity,
         unitPrice: qi.unitPrice,
         lineTotal: qi.lineTotal,
@@ -573,11 +625,13 @@ class MockDatabase {
       walletAddress: payload.walletAddress,
       network: payload.network,
       txHash,
-      status: payload.simulateFailure ? 'failed' : 'confirmed',
+      status: payload.simulateFailure ? 'failed' : this.getScenario() === 'order_pending' ? 'pending' : 'confirmed',
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       confirmedAt: payload.simulateFailure ? undefined : new Date().toISOString(),
       version: 1,
     }
+    if (newOrder.status === 'pending') newOrder.confirmedAt = undefined
 
     this.state.orders.unshift(newOrder)
 
@@ -595,21 +649,7 @@ class MockDatabase {
 
     // Clear bought items and exact quantities from user cart only upon confirmed success
     if (newOrder.status === 'confirmed') {
-      const currentCart = this.state.carts[userId] || []
-      const updatedCart: CartItem[] = []
-
-      for (const cartItem of currentCart) {
-        const bought = payload.items.find((i) => i.nftId === cartItem.nftId)
-        if (bought) {
-          const remainingQty = cartItem.quantity - bought.quantity
-          if (remainingQty > 0) {
-            updatedCart.push({ ...cartItem, quantity: remainingQty })
-          }
-        } else {
-          updatedCart.push(cartItem)
-        }
-      }
-      this.state.carts[userId] = updatedCart
+      this.removePurchasedCartItems(userId, payload.items)
     }
 
     this.persist()
@@ -618,6 +658,49 @@ class MockDatabase {
 
   public getOrderById(orderId: string): OrderReceipt | null {
     return this.state.orders.find((o) => o.orderId === orderId) || null
+  }
+
+  private removePurchasedCartItems(userId: string, purchasedItems: CreateOrderPayload['items']) {
+    const updatedCart: CartItem[] = []
+    for (const cartItem of this.state.carts[userId] || []) {
+      const bought = purchasedItems.find((item) => item.nftId === cartItem.nftId)
+      if (!bought) updatedCart.push(cartItem)
+      else if (cartItem.quantity > bought.quantity) {
+        updatedCart.push({ ...cartItem, quantity: cartItem.quantity - bought.quantity })
+      }
+    }
+    this.state.carts[userId] = updatedCart
+  }
+
+  public updateOrderStatus(orderId: string, status: 'confirmed' | 'failed'): OrderReceipt | null {
+    const order = this.getOrderById(orderId)
+    if (!order || order.status !== 'pending') return null
+
+    const now = new Date().toISOString()
+    order.status = status
+    order.updatedAt = now
+    order.version += 1
+    if (status === 'confirmed') {
+      order.confirmedAt = now
+      this.removePurchasedCartItems(order.userId, order.items)
+    } else {
+      order.confirmedAt = undefined
+      for (const item of order.items) {
+        const nft = this.state.nfts.find((candidate) => candidate.id === item.nftId)
+        if (!nft) continue
+        nft.availableSupply += item.quantity
+        nft.isSoldOut = nft.availableSupply <= 0
+        nft.version += 1
+        nft.updatedAt = now
+      }
+    }
+    this.persist()
+    return order
+  }
+
+  public getOrderByIdempotencyKey(userId: string, idempotencyKey: string): OrderReceipt | null {
+    const order = this.state.ordersByIdempotency[idempotencyKey]?.order
+    return order?.userId === userId ? order : null
   }
 
   public getOrdersByUser(userId: string): OrderReceipt[] {

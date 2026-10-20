@@ -31,5 +31,14 @@ dist-ssr
 /playwright/.cache/
 .lighthouseci/
 
+# Local reference files and generated Lighthouse runs
+/design/
+/docs/second-brain/screenshots/home-mobile-reference.png
+/docs/second-brain/evidence/lighthouse/
+/lighthouse-reports/*.html
+/lighthouse-reports/*.json
+/lighthouse-reports/*-followup-*/
+/lighthouse-reports/ship-ready-*/
+
 # TS build info
 *.tsbuildinfo
