@@ -180,15 +180,17 @@ export const CatalogGrid: React.FC<CatalogGridProps> = ({ searchParams, onUpdate
           {/* Top Control Bar with Figma Tabs */}
           <div className="flex items-center justify-between gap-2 pb-2 mb-3 border-b border-border md:flex-wrap md:gap-x-2 md:gap-y-2 lg:flex-nowrap lg:gap-4 lg:pb-4 lg:mb-4">
             <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => setMobileFilterOpen(true)}
                 aria-label="Filtros"
-                className="hidden h-9 shrink-0 items-center gap-2 rounded-md border border-border bg-surface px-3 text-xs font-semibold text-foreground md:flex lg:hidden"
+                className="hidden h-9 shrink-0 items-center gap-2 rounded-md border-border bg-surface px-3 text-xs font-semibold text-foreground md:flex lg:hidden"
               >
                 <SlidersHorizontal className="h-4 w-4 text-primary" aria-hidden="true" />
                 <span className="sr-only">Filtros</span>
-              </button>
+              </Button>
 
               {/* View Tabs matching Figma */}
               <div className="flex min-w-0 items-center gap-1 sm:gap-4">
@@ -314,19 +316,21 @@ export const CatalogGrid: React.FC<CatalogGridProps> = ({ searchParams, onUpdate
 
                   <div className="flex items-center gap-1">
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                      <button
+                      <Button
                         key={p}
+                        variant={p === page ? 'default' : 'outline'}
+                        size="icon-sm"
                         onClick={() => onUpdateParams({ page: p })}
                         disabled={isFetching}
                         aria-current={p === page ? 'page' : undefined}
-                        className={`w-8 h-8 rounded-md text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-primary ${
+                        className={`w-8 h-8 rounded-md text-xs font-semibold ${
                           p === page
-                            ? 'bg-primary text-primary-foreground font-bold shadow-sm'
-                            : 'bg-surface text-foreground hover:bg-surface-secondary border border-border'
+                            ? 'font-bold shadow-sm'
+                            : 'bg-surface text-foreground hover:bg-surface-secondary border-border'
                         }`}
                       >
                         {p}
-                      </button>
+                      </Button>
                     ))}
                   </div>
 

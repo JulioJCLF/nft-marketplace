@@ -45,7 +45,7 @@ Use o **Simulador de Cenários MSW** na aplicação para testar falhas HTTP, pag
 
 ## Tecnologias
 
-React, TypeScript, Vite, TanStack Router/Query, Tailwind CSS, Radix UI, Decimal.js, MSW, Socket.IO e Playwright.
+React, TypeScript, Vite, TanStack Router/Query, Axios, Tailwind CSS, shadcn/ui (componentes locais sobre Radix UI), Decimal.js, MSW, Socket.IO, Playwright e Lighthouse.
 
 ## Validação e publicação
 
@@ -55,4 +55,4 @@ Os detalhes dos testes, resultados Lighthouse e limitações conhecidas estão e
 - Diretório de saída: `dist`
 - Fallback SPA: `public/_redirects`
 
-A [demonstração pública](https://nft-marketplace-6b1.pages.dev) ainda pode não corresponder a este checkout; confira o estado de publicação antes de usá-la para avaliação.
+A [demonstração pública](https://nft-marketplace-6b1.pages.dev) está publicada no Cloudflare Pages com suporte a acesso direto nas rotas SPA e mocks MSW ativos.

@@ -4,7 +4,7 @@ Fonte: [`SPECIFICATION.md`](SPECIFICATION.md). “Validado” exige evidência e
 
 | ID | Requisito verificável | Estado | Evidência atual | Próxima ação |
 |---|---|---|---|---|
-| S01 | React + TypeScript e stack principal (Router, Query, Axios, Tailwind, MSW, Socket.IO) | Parcial | Dependências, imports e build; `package.json`, `src/app/App.tsx` | Confirmar shadcn/ui explicitamente e documentar seu uso local |
+| S01 | React + TypeScript e stack principal (Router, Query, Axios, Tailwind, shadcn/ui, MSW, Socket.IO) | Validado | Dependências e imports; componentes shadcn locais em `src/components/ui/`; configuração CLI em `components.json`; build | — |
 | S02 | Rotas de início, detalhe, carrinho, checkout, perfil e docs com acesso direto | Parcial | rotas em `src/routes/router.tsx`; visual tests em quatro fluxos | Cobrir refresh de todas as rotas privadas |
 | S03 | Busca sincronizada com URL | Validado | E2E desktop/mobile/tablet: `01-catalog-and-search.spec.ts` | — |
 | S04 | Combinação de filtros, parâmetros API e reset da página | Parcial | filtros/categoria testados; faixa e status não combinados em E2E | Cobrir combinação e refresh |
@@ -41,6 +41,6 @@ Fonte: [`SPECIFICATION.md`](SPECIFICATION.md). “Validado” exige evidência e
 | S35 | Lighthouse: 3 execuções/página em mobile e desktop + HTML/JSON | Validado | Três medições por combinação, medianas acima da meta nas quatro combinações; relatórios em `lighthouse-reports/adversarial-recheck-2026-10-20/` | — |
 | S36 | Setup, contratos, cenários, limites e instruções reproduzíveis | Parcial | `README.md`, `/docs`; esta base adiciona rastreabilidade | Conciliar URLs públicas divergentes e detalhar todos os contratos |
 | S37 | Build a partir do checkout atual | Validado | `npm run build` passou nesta execução | Testar clone limpo sem sobrescrever o checkout atual |
-| S38 | Deploy publicado, rotas e mocks validados | Não verificado | README e UI citam URLs diferentes | Verificar URL existente; deploy não foi executado |
+| S38 | Deploy publicado, rotas e mocks validados | Validado | Deploy atualizado em `https://nft-marketplace-6b1.pages.dev`; HTTP 200 confirmado em `/`, `/nft/bored-ape-7090`, `/checkout`, `/profile`, `/docs` e `/mockServiceWorker.js` | — |
 
-**Cobertura estritamente marcada como validada nesta matriz: 19/38 (50%).** Parcial e não verificado não contam como concluídos. O deploy permanece “não verificado”; a pontuação de avaliação continua estimada, não garantida.
+**Cobertura estritamente marcada como validada nesta matriz: 20/38 (52.6%).** Parcial não conta como concluído; a pontuação de avaliação continua estimada, não garantida.

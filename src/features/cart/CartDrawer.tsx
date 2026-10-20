@@ -3,6 +3,7 @@ import { X, Trash2, Plus, Minus, ShoppingCart, ArrowRight, Tag, AlertCircle } fr
 import { useCart } from './CartContext'
 import { useAuth } from '@/features/auth/AuthContext'
 import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
 import { formatEth, formatUsdEquivalent } from '@/lib/eth'
 import { useNavigate } from '@tanstack/react-router'
 
@@ -191,12 +192,12 @@ export const CartDrawer: React.FC = () => {
                   </div>
                 ) : (
                   <form onSubmit={handleApplyCoupon} className="flex gap-2">
-                    <input
+                    <Input
                       type="text"
                       placeholder="Cupom (ex: DESC10)"
                       value={couponInput}
                       onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                      className="h-10 min-w-0 flex-1 rounded-full border border-border bg-background px-4 text-xs font-mono uppercase text-foreground placeholder:text-foreground-muted focus:border-primary/70 focus:outline-none focus:ring-1 focus:ring-primary"
+                      className="h-10 min-w-0 flex-1 rounded-full border-border bg-background px-4 text-xs font-mono uppercase text-foreground placeholder:text-foreground-muted focus-visible:border-primary/70"
                     />
                     <Button type="submit" size="sm" variant="outline" isLoading={isApplyingCoupon}>
                       Aplicar

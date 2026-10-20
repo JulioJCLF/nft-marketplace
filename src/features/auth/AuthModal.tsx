@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/Dialog'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useAuth } from './AuthContext'
 import { useNavigate } from '@tanstack/react-router'
 import { AlertCircle, UserCheck, Shield } from 'lucide-react'
@@ -126,32 +127,33 @@ export const AuthModal: React.FC = () => {
               <span>Contas de Teste Pré-configuradas:</span>
             </div>
             <div className="flex gap-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => handleQuickLogin('alice@example.com')}
-                className="flex-1 py-1 px-2 rounded bg-surface hover:bg-surface-tertiary border border-border text-[11px] text-foreground font-mono truncate"
+                className="flex-1 h-auto py-1 px-2 rounded bg-surface hover:bg-surface-tertiary border-border text-[11px] text-foreground font-mono font-normal truncate"
               >
                 Alice Vance
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => handleQuickLogin('bob@example.com')}
-                className="flex-1 py-1 px-2 rounded bg-surface hover:bg-surface-tertiary border border-border text-[11px] text-foreground font-mono truncate"
+                className="flex-1 h-auto py-1 px-2 rounded bg-surface hover:bg-surface-tertiary border-border text-[11px] text-foreground font-mono font-normal truncate"
               >
                 Bob Martin
-              </button>
+              </Button>
             </div>
           </div>
         )}
 
         {errorMessage && (
-          <div
-            className="p-3 rounded-md bg-red-500/10 border border-red-500/30 text-xs text-red-400 flex items-center gap-2"
-            role="alert"
-          >
+          <Alert variant="destructive" className="gap-2 rounded-md p-3">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            <span>{errorMessage}</span>
-          </div>
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-1">
@@ -204,10 +206,11 @@ export const AuthModal: React.FC = () => {
               <span>Ou continue com</span>
               <span className="h-px flex-1 bg-border" />
             </div>
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => setErrorMessage(`${authModalMode === 'register' ? 'O cadastro' : 'O login'} com Google ainda não está disponível.`)}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-border bg-transparent text-xs font-semibold text-foreground-muted transition-colors hover:border-primary/60 hover:text-foreground"
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-md border-border bg-transparent px-4 py-2 text-xs font-semibold text-foreground-muted hover:bg-transparent hover:border-primary/60 hover:text-foreground"
             >
               <svg viewBox="0 0 48 48" className="h-4 w-4" aria-hidden="true">
                 <path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.8 6.1-15Z" />
@@ -216,17 +219,18 @@ export const AuthModal: React.FC = () => {
                 <path fill="#EA4335" d="M24 11.9c3 0 5.7 1 7.8 3.1l5.8-5.8A19.4 19.4 0 0 0 24 4 20 20 0 0 0 5.8 15.1l6.8 5.2c1.6-4.8 6.1-8.4 11.4-8.4Z" />
               </svg>
               Continuar com Google
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="outline"
               onClick={() => setErrorMessage(`${authModalMode === 'register' ? 'O cadastro' : 'O login'} com Facebook ainda não está disponível.`)}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-border bg-transparent text-xs font-semibold text-foreground-muted transition-colors hover:border-primary/60 hover:text-foreground"
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-md border-border bg-transparent px-4 py-2 text-xs font-semibold text-foreground-muted hover:bg-transparent hover:border-primary/60 hover:text-foreground"
             >
               <svg viewBox="0 0 24 24" className="h-4 w-4 fill-[#4267B2]" aria-hidden="true">
                 <path d="M13.5 21v-8.2h2.8l.4-3.2h-3.2v-2c0-.9.3-1.6 1.6-1.6h1.7V3.1c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.3H7.3v3.2h2.8V21h3.4Z" />
               </svg>
               Continuar com Facebook
-            </button>
+            </Button>
         </div>
       </DialogContent>
     </Dialog>

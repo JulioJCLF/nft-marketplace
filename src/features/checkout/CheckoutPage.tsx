@@ -5,6 +5,8 @@ import { useCart } from '@/features/cart/CartContext'
 import { useAuth } from '@/features/auth/AuthContext'
 import { useRealtime } from '@/realtime/RealtimeContext'
 import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { formatEth } from '@/lib/eth'
 import { Decimal } from 'decimal.js'
 import { WalletProvider, NetworkId, OrderReceipt } from '@/types'
@@ -435,17 +437,17 @@ export const CheckoutPage: React.FC = () => {
 
       {/* Real-time Outdated Quote Warning Banner */}
       {(hasPriceMismatch || !quoteAccepted) && (
-        <div className="p-4 rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-200 text-xs sm:text-sm space-y-3">
+        <Alert variant="warning" className="block space-y-3 p-4 text-xs sm:text-sm">
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
             <div>
-              <strong className="block font-bold text-amber-300">
+              <AlertTitle className="mb-0 font-bold text-amber-300 leading-normal">
                 Alteração em tempo real detectada durante o checkout!
-              </strong>
-              <p className="mt-1 text-xs text-amber-200/90 leading-relaxed">
+              </AlertTitle>
+              <AlertDescription className="mt-1 text-xs text-amber-200/90 leading-relaxed">
                 O preço ou disponibilidade de um dos itens no seu pedido mudou na rede Ethereum via Socket.IO.
                 Para sua segurança, a compra foi bloqueada até que você revise e aprove a nova cotação.
-              </p>
+              </AlertDescription>
             </div>
           </div>
           <div className="pt-1">
@@ -457,14 +459,14 @@ export const CheckoutPage: React.FC = () => {
               Revisar e Aceitar Nova Cotação
             </Button>
           </div>
-        </div>
+        </Alert>
       )}
 
       {errorMessage && (
-        <div className="p-4 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-xs flex items-center gap-3">
+        <Alert variant="destructive">
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <span>{errorMessage}</span>
-        </div>
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
       )}
 
       <div className="grid grid-cols-1 items-start gap-8 md:mt-7 lg:grid-cols-[minmax(0,1fr)_405px] lg:gap-8">
@@ -474,11 +476,11 @@ export const CheckoutPage: React.FC = () => {
             <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
               <label className="space-y-1.5 text-xs text-foreground">
                 <span className="block">Nome de exibição<span className="text-primary">*</span></span>
-                <input value={user?.name ?? ''} readOnly className="h-10 w-full border border-border bg-transparent px-3 text-xs text-foreground-muted outline-none" />
+                <Input value={user?.name ?? ''} readOnly className="h-10 rounded-none border-border bg-transparent px-3 py-0 text-xs text-foreground-muted focus-visible:ring-0 focus-visible:border-border" />
               </label>
               <label className="space-y-1.5 text-xs text-foreground">
                 <span className="block">Nome de usuário<span className="text-primary">*</span></span>
-                <input value={profileFields.username} onChange={(e) => setProfileFields((fields) => ({ ...fields, username: e.target.value }))} className="h-10 w-full border border-border bg-transparent px-3 text-xs text-foreground outline-none focus:border-primary" />
+                <Input value={profileFields.username} onChange={(e) => setProfileFields((fields) => ({ ...fields, username: e.target.value }))} className="h-10 rounded-none border-border bg-transparent px-3 py-0 text-xs text-foreground focus-visible:ring-0 focus-visible:border-primary" />
               </label>
 
               <label className="space-y-1.5 text-xs text-foreground">
@@ -494,16 +496,16 @@ export const CheckoutPage: React.FC = () => {
               </label>
               <label className="space-y-1.5 text-xs text-foreground">
                 <span className="block">Nome do perfil<span className="text-primary">*</span></span>
-                <input value={profileFields.profileName} onChange={(e) => setProfileFields((fields) => ({ ...fields, profileName: e.target.value }))} className="h-10 w-full border border-border bg-transparent px-3 text-xs text-foreground outline-none focus:border-primary" />
+                <Input value={profileFields.profileName} onChange={(e) => setProfileFields((fields) => ({ ...fields, profileName: e.target.value }))} className="h-10 rounded-none border-border bg-transparent px-3 py-0 text-xs text-foreground focus-visible:ring-0 focus-visible:border-primary" />
               </label>
 
               <label className="space-y-1.5 text-xs text-foreground">
                 <span className="block">Endereço da carteira<span className="text-primary">*</span></span>
-                <input value={walletAddress} onChange={(e) => setWalletAddress(e.target.value)} readOnly={!useAnotherWallet} className="h-10 w-full border border-border bg-transparent px-3 font-mono text-[10px] text-foreground-muted outline-none read-only:opacity-80 focus:border-primary" />
+                <Input value={walletAddress} onChange={(e) => setWalletAddress(e.target.value)} readOnly={!useAnotherWallet} className="h-10 rounded-none border-border bg-transparent px-3 py-0 font-mono text-[10px] text-foreground-muted read-only:opacity-80 focus-visible:ring-0 focus-visible:border-primary" />
               </label>
               <label className="space-y-1.5 text-xs text-foreground">
                 <span className="block">ENS ou carteira secundária (opcional)</span>
-                <input value={profileFields.secondaryWallet} onChange={(e) => setProfileFields((fields) => ({ ...fields, secondaryWallet: e.target.value }))} className="h-10 w-full border border-border bg-transparent px-3 text-xs text-foreground outline-none focus:border-primary" />
+                <Input value={profileFields.secondaryWallet} onChange={(e) => setProfileFields((fields) => ({ ...fields, secondaryWallet: e.target.value }))} className="h-10 rounded-none border-border bg-transparent px-3 py-0 text-xs text-foreground focus-visible:ring-0 focus-visible:border-primary" />
               </label>
 
               <label className="space-y-1.5 text-xs text-foreground">
@@ -512,17 +514,17 @@ export const CheckoutPage: React.FC = () => {
               </label>
               <label className="space-y-1.5 text-xs text-foreground">
                 <span className="block">Código de indicação<span className="text-primary">*</span></span>
-                <input value={profileFields.referralCode} onChange={(e) => setProfileFields((fields) => ({ ...fields, referralCode: e.target.value }))} className="h-10 w-full border border-border bg-transparent px-3 text-xs text-foreground outline-none focus:border-primary" />
+                <Input value={profileFields.referralCode} onChange={(e) => setProfileFields((fields) => ({ ...fields, referralCode: e.target.value }))} className="h-10 rounded-none border-border bg-transparent px-3 py-0 text-xs text-foreground focus-visible:ring-0 focus-visible:border-primary" />
               </label>
 
               <label className="space-y-1.5 text-xs text-foreground">
                 <span className="block">E-mail<span className="text-primary">*</span></span>
-                <input value={user?.email ?? ''} readOnly className="h-10 w-full border border-border bg-transparent px-3 text-xs text-foreground-muted outline-none" />
+                <Input value={user?.email ?? ''} readOnly className="h-10 rounded-none border-border bg-transparent px-3 py-0 text-xs text-foreground-muted focus-visible:ring-0 focus-visible:border-border" />
               </label>
               <label className="space-y-1.5 text-xs text-foreground">
                 <span className="block">Nome ENS<span className="text-primary">*</span></span>
                 <div className="flex h-10">
-                  <input value={profileFields.ensName} onChange={(e) => setProfileFields((fields) => ({ ...fields, ensName: e.target.value }))} className="min-w-0 flex-1 border border-border bg-transparent px-3 text-xs text-foreground outline-none focus:border-primary" />
+                  <Input value={profileFields.ensName} onChange={(e) => setProfileFields((fields) => ({ ...fields, ensName: e.target.value }))} className="h-10 min-w-0 rounded-none border-border bg-transparent px-3 py-0 text-xs text-foreground focus-visible:ring-0 focus-visible:border-primary" />
                   <span className="flex items-center border border-l-0 border-border px-3 text-xs text-foreground-muted">.eth</span>
                 </div>
               </label>

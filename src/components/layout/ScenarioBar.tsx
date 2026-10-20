@@ -5,6 +5,9 @@ import { useAuth } from '@/features/auth/AuthContext'
 import { useRealtime } from '@/realtime/RealtimeContext'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouterState } from '@tanstack/react-router'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export const ScenarioBar: React.FC = () => {
   const isNFTDetailsPage = useRouterState({ select: (state) => state.location.pathname.startsWith('/nft/') })
@@ -140,40 +143,44 @@ export const ScenarioBar: React.FC = () => {
             </button>
 
             {/* Socket.IO Connection Pill */}
-            <div
+            <Badge
+              variant={isConnected ? 'success' : 'danger'}
               className={`${isOpen ? 'flex' : 'hidden'} items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
                 isConnected
-                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-red-500/15 text-red-400 border border-red-500/30'
+                  ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                  : 'bg-red-500/15 text-red-400 border-red-500/30'
               }`}
               title={isConnected ? 'Socket.IO conectado' : 'Socket.IO desconectado'}
             >
               {isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
               <span className="hidden md:inline">{isConnected ? 'Socket.IO Conectado' : 'Reconectando...'}</span>
-            </div>
+            </Badge>
           </div>
 
           {/* Right Actions */}
           <div className={`${isOpen ? 'flex' : 'hidden'} items-center gap-1 pl-1 border-l border-border/60`}>
-            <button
+            <Button
+              size="sm"
               onClick={handleRunMandatoryScenario}
-              className="flex items-center gap-1 px-2 py-0.5 rounded bg-primary text-primary-foreground font-bold text-[10px] hover:bg-primary/90 shadow-sm transition-all"
+              className="h-auto flex items-center gap-1 px-2 py-0.5 rounded bg-primary text-primary-foreground font-bold text-[10px] hover:bg-primary/90 shadow-sm transition-all"
               title="Executa automaticamente o cenário do desafio: Login -> Adiciona BAYC #7090 -> Checkout -> Altera Preço via Socket.IO -> Bloqueia Pagamento"
             >
               <Zap className="w-3 h-3" />
               <span className="hidden md:inline">Testar Cenário</span>
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleReset}
               disabled={isResetting}
-              className="flex items-center gap-1 p-1 sm:px-2 sm:py-0.5 rounded bg-surface hover:bg-surface-tertiary border border-border text-[10px] text-foreground hover:border-primary transition-all disabled:opacity-50"
+              className="h-auto flex items-center gap-1 p-1 sm:px-2 sm:py-0.5 rounded bg-surface hover:bg-surface-tertiary border-border text-[10px] text-foreground hover:border-primary transition-all disabled:opacity-50 font-normal"
               title="Restaura os dados e fixtures padrão da demonstração"
               aria-label="Resetar Mocks"
             >
               <RotateCcw className={`w-3 h-3 ${isResetting ? 'animate-spin' : ''}`} />
               <span className="hidden md:inline">Resetar</span>
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -260,20 +267,24 @@ export const ScenarioBar: React.FC = () => {
                     Disparar Evento Socket.IO Manual
                   </label>
                   <div className="flex gap-1.5">
-                    <button
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => handleTriggerPriceChange('bored-ape-7090', '49.9000')}
-                      className="flex-1 h-8 rounded bg-surface-secondary hover:bg-surface-tertiary border border-border text-[11px] text-foreground font-medium"
+                      className="flex-1 h-8 px-2 rounded bg-surface-secondary hover:bg-surface-tertiary border-border text-[11px] text-foreground font-medium"
                       title="Altera o preço do BAYC #7090 para 49.9 ETH via Socket.IO"
                     >
                       Aumentar Preço BAYC #7090
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => handleTriggerSoldOut('bored-ape-7090')}
-                      className="flex-1 h-8 rounded bg-surface-secondary hover:bg-surface-tertiary border border-border text-[11px] text-red-300 font-medium"
+                      className="flex-1 h-8 px-2 rounded bg-surface-secondary hover:bg-surface-tertiary border-border text-[11px] text-red-300 font-medium"
                       title="Esgota estoque do BAYC #7090 via Socket.IO"
                     >
                       Esgotar Estoque
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -283,27 +294,33 @@ export const ScenarioBar: React.FC = () => {
                     Alternar Usuário Fictício
                   </label>
                   <div className="flex gap-1.5">
-                    <button
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       data-testid="scenario-switch-alice"
                       onClick={() => login('alice@example.com', 'Password123!')}
-                      className="flex-1 h-8 rounded bg-surface-secondary hover:bg-surface-tertiary border border-border text-[11px] text-foreground font-medium truncate"
+                      className="flex-1 h-8 px-2 rounded bg-surface-secondary hover:bg-surface-tertiary border-border text-[11px] text-foreground font-medium truncate"
                     >
                       Alice Vance
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       data-testid="scenario-switch-bob"
                       onClick={() => login('bob@example.com', 'Password123!')}
-                      className="flex-1 h-8 rounded bg-surface-secondary hover:bg-surface-tertiary border border-border text-[11px] text-foreground font-medium truncate"
+                      className="flex-1 h-8 px-2 rounded bg-surface-secondary hover:bg-surface-tertiary border-border text-[11px] text-foreground font-medium truncate"
                     >
                       Bob Martin
-                    </button>
+                    </Button>
                     {user && (
-                      <button
+                      <Button
+                        variant="danger"
+                        size="sm"
                         onClick={() => logout()}
-                        className="px-2 h-8 rounded bg-red-950/40 hover:bg-red-900/60 border border-red-800/40 text-[11px] text-red-300 font-medium"
+                        className="px-2 h-8 rounded bg-red-950/40 hover:bg-red-900/60 border border-red-800/40 text-[11px] text-red-300 font-medium shadow-none"
                       >
                         Sair
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -390,10 +407,10 @@ export const ScenarioBar: React.FC = () => {
             )}
 
             {triggerStatus && (
-              <div className="max-w-7xl mx-auto p-2 rounded bg-primary/10 border border-primary/30 text-primary text-xs flex items-center gap-2">
+              <Alert className="max-w-7xl mx-auto p-2 rounded bg-primary/10 border-primary/30 text-primary text-xs gap-2">
                 <Activity className="w-3.5 h-3.5 animate-spin" />
-                <span>{triggerStatus}</span>
-              </div>
+                <AlertDescription>{triggerStatus}</AlertDescription>
+              </Alert>
             )}
           </div>
         )}

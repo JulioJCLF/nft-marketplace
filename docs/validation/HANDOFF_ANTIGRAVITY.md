@@ -17,12 +17,8 @@ Leia [`INDEX.md`](INDEX.md), depois a matriz de requisitos e o backlog. A fonte 
 
 ## Próxima ação operacional
 
-As suítes e o Lighthouse estão completos. Leia [`VALIDATION.md`](VALIDATION.md), os relatórios em `../../lighthouse-reports/adversarial-recheck-2026-10-20/` e as limitações em `KNOWN_ISSUES.md`. O commit local está preparado; o push requer autenticação GitHub válida. O deploy continua a cargo do usuário.
+As suítes, o Lighthouse, o deploy no Cloudflare Pages (`https://nft-marketplace-6b1.pages.dev`) e o envio ao GitHub foram concluídos. Leia [`VALIDATION.md`](VALIDATION.md), os relatórios em `../../lighthouse-reports/adversarial-recheck-2026-10-20/` e as limitações em `KNOWN_ISSUES.md`.
 
 ## Pendências com maior risco de avaliação
 
 1. Comparação direta com cada export Figma; as referências ficam apenas no workspace local e a fidelidade 1:1 não está certificada.
-2. Manter a URL pública alinhada com o checkout após publicar.
-3. Revisar a implementação de shadcn/ui se a avaliação exigir uso explícito do CLI ou pacote.
-
-Nenhum deploy foi executado.

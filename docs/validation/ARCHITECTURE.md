@@ -8,7 +8,7 @@
 - `src/mocks/`: `Mock Service Worker`, handlers REST, fixtures e banco local persistente; `socketBinding.ts` conecta o binding compatível com Socket.IO.
 - `src/realtime/`: `socket.io-client`, subscriptions, filtros de versão e invalidação/reconciliação do cache.
 - TanStack Query identifica recursos e invalida `cart`, `quote`, `orders`, `nfts`, `favorites`, `wallets` após alterações/eventos.
-- `src/components/ui/`: componentes locais com Tailwind; `Dialog.tsx` usa Radix Dialog. Não há pacote runtime chamado `shadcn`; confirmar se o padrão local atende a avaliação da stack.
+- `src/components/ui/`: camada shadcn/ui de componentes locais editáveis, adaptada aos tokens do projeto. `Button`, `Badge`, `Input`, `Dialog`, `Skeleton` e `Alert` são usados nas telas de catálogo, detalhe, autenticação, carrinho, checkout, perfil, documentação e barra de cenários; Radix fornece os primitivos quando necessário, CVA as variantes e `cn` a composição de classes. `components.json` configura o CLI shadcn para este projeto Vite/Tailwind 3. shadcn/ui distribui código-fonte e não precisa de pacote runtime.
 
 ## Dados e contratos observados
 

@@ -397,7 +397,7 @@ export const NFTDetailsPage: React.FC<NFTDetailsPageProps> = ({ nftId }) => {
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <h3 className="text-sm font-semibold text-foreground">{review.author}</h3>
-                        {review.isMock && <span className="mt-1 inline-block rounded-full border border-primary/50 px-2 py-0.5 text-[10px] text-primary">Comentário de demonstração</span>}
+                        {review.isMock && <Badge variant="outline" className="mt-1 border-primary/50 px-2 py-0.5 text-[10px] font-normal text-primary">Comentário de demonstração</Badge>}
                       </div>
                       <div className="flex items-center gap-1" aria-label={`Nota ${review.rating} de 5`}>
                         {Array.from({ length: 5 }, (_, starIndex) => (

@@ -14,6 +14,8 @@ import {
   Menu,
   X,
 } from 'lucide-react'
+import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
 
 const DOC_SECTIONS = [
   { id: 'visao-geral', title: '1. Visão Geral', icon: BookOpen },
@@ -47,10 +49,10 @@ export const DocsPage: React.FC = () => {
       {/* Page Header */}
       <div className="border-b border-border pb-8 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-semibold mb-3">
+          <Badge className="gap-1.5 px-3 py-1 rounded-full bg-primary/10 border-primary/30 text-primary text-xs font-semibold mb-3">
             <BookOpen className="w-3.5 h-3.5" />
             <span>Documentação Técnica Oficial</span>
-          </div>
+          </Badge>
           <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight">
             NFT Marketplace — Guia de Arquitetura & Implementação
           </h1>
@@ -60,13 +62,15 @@ export const DocsPage: React.FC = () => {
         </div>
 
         {/* Mobile menu trigger */}
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="lg:hidden self-start flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-surface text-xs font-bold text-foreground"
+          className="lg:hidden self-start flex items-center gap-2 px-3 py-2 rounded-lg border-border bg-surface text-xs font-bold text-foreground"
         >
           {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           <span>Índice da Documentação</span>
-        </button>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">

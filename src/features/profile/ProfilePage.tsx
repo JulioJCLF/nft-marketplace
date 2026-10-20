@@ -6,6 +6,7 @@ import { Wallet, OrderReceipt, NFT, WalletProvider, NetworkId } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { NFTCard } from '@/features/catalog/NFTCard'
 import { formatEth, formatDate, truncateAddress } from '@/lib/eth'
 import { useNavigate, useSearch } from '@tanstack/react-router'
@@ -350,16 +351,16 @@ export const ProfilePage: React.FC = () => {
           <div className="space-y-4">
 
             {profileMessage && (
-              <div role="status" className="p-3 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
+              <Alert role="status" variant="success" className="gap-2 rounded-md p-3">
                 <CheckCircle2 className="w-4 h-4" />
-                <span>{profileMessage}</span>
-              </div>
+                <AlertDescription>{profileMessage}</AlertDescription>
+              </Alert>
             )}
             {profileError && (
-              <div role="alert" className="p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+              <Alert variant="destructive" className="gap-2 rounded-md p-3">
                 <AlertCircle className="w-4 h-4" />
-                <span>{profileError}</span>
-              </div>
+                <AlertDescription>{profileError}</AlertDescription>
+              </Alert>
             )}
 
             <form
@@ -435,8 +436,8 @@ export const ProfilePage: React.FC = () => {
                     <div className="flex items-center gap-4">
                       <img src={avatar || '/avatars/creator.svg'} alt={`Avatar de ${name}`} className="h-12 w-12 rounded-full border border-primary/60 object-cover" />
                       <div className="flex items-center gap-3 text-xs">
-                        <button type="button" onClick={() => avatarInputRef.current?.click()} className="rounded-sm bg-primary px-4 py-2 font-semibold text-primary-foreground hover:bg-primary-hover">Alterar</button>
-                        <button type="button" onClick={() => setAvatar('/avatars/creator.svg')} className="text-foreground-muted hover:text-foreground">Remover</button>
+                        <Button type="button" size="sm" onClick={() => avatarInputRef.current?.click()} className="h-auto rounded-sm bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-none hover:bg-primary-hover">Alterar</Button>
+                        <Button type="button" variant="link" size="sm" onClick={() => setAvatar('/avatars/creator.svg')} className="h-auto p-0 text-xs text-foreground-muted hover:text-foreground hover:no-underline">Remover</Button>
                       </div>
                       <input
                         ref={avatarInputRef}
@@ -497,7 +498,7 @@ export const ProfilePage: React.FC = () => {
                 <h1 className="text-base font-bold text-foreground">Carteira principal</h1>
                 <p className="mt-1 text-xs text-foreground-muted">Estas carteiras ficam disponíveis no pagamento e para receber NFTs comprados.</p>
               </div>
-              <button aria-label="Adicionar carteira" onClick={() => setAddWalletOpen(true)} className="shrink-0 text-sm font-semibold text-primary hover:text-primary-hover">Adicionar</button>
+              <Button type="button" variant="link" size="sm" aria-label="Adicionar carteira" onClick={() => setAddWalletOpen(true)} className="h-auto shrink-0 p-0 text-sm font-semibold text-primary hover:text-primary-hover hover:no-underline">Adicionar</Button>
             </div>
 
             {networkError && <p className="text-xs text-red-400" role="alert">{networkError}</p>}
@@ -622,7 +623,7 @@ export const ProfilePage: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <Button variant="outline" size="sm" onClick={() => setPrimaryWalletMutation.mutate(wallet.id)} className="h-8 rounded-sm px-3 text-[10px]">Definir como principal</Button>
-                  <button onClick={() => removeWalletMutation.mutate(wallet.id)} className="p-1 text-foreground-muted hover:text-red-400" aria-label="Remover carteira"><Trash2 className="h-4 w-4" /></button>
+                  <Button type="button" variant="ghost" size="icon-sm" onClick={() => removeWalletMutation.mutate(wallet.id)} className="h-auto w-auto p-1 text-foreground-muted hover:bg-transparent hover:text-red-400" aria-label="Remover carteira"><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>
             ))}
@@ -637,10 +638,10 @@ export const ProfilePage: React.FC = () => {
               </DialogHeader>
 
               {walletError && (
-                <div className="p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+                <Alert variant="destructive" className="gap-2 rounded-md p-3">
                   <AlertCircle className="w-4 h-4" />
-                  <span>{walletError}</span>
-                </div>
+                  <AlertDescription>{walletError}</AlertDescription>
+                </Alert>
               )}
 
               <form

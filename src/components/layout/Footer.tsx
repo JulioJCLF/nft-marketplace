@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { CheckCircle2 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
 
 export const Footer: React.FC = () => {
   const [newsletterEmail, setNewsletterEmail] = useState('')
@@ -61,7 +62,7 @@ export const Footer: React.FC = () => {
               <div className="flex items-center gap-2 text-emerald-400 text-xs"><CheckCircle2 className="w-4 h-4" /><span>Inscrição realizada com sucesso!</span></div>
             ) : (
               <form onSubmit={handleSubscribe} className="flex gap-1.5">
-                <input type="email" placeholder="digite seu e-mail..." value={newsletterEmail} onChange={(e) => setNewsletterEmail(e.target.value)} required className="min-w-0 flex-1 h-8 rounded border border-border bg-surface px-2 text-[10px] text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-primary" />
+                <Input type="email" placeholder="digite seu e-mail..." value={newsletterEmail} onChange={(e) => setNewsletterEmail(e.target.value)} required className="min-w-0 flex-1 h-8 rounded border-border bg-surface px-2 py-0 text-[10px] text-foreground placeholder:text-foreground-muted" />
                 <Button type="submit" size="sm" className="h-8 px-2 text-[10px] font-bold">Enviar</Button>
               </form>
             )}

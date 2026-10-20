@@ -4,6 +4,7 @@ import { ShoppingCart, User, LogIn, LogOut, Wallet, Menu, X, Heart, Package, Sea
 import { useAuth } from '@/features/auth/AuthContext'
 import { useCart } from '@/features/cart/CartContext'
 import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
 
 export const Navbar: React.FC = () => {
   const { user, isAuthenticated, logout, setAuthModalOpen, setAuthModalMode } = useAuth()
@@ -54,24 +55,25 @@ export const Navbar: React.FC = () => {
             }}
           >
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted" />
-              <input
+              <Search className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-foreground-muted" />
+              <Input
                 type="search"
                 aria-label="Nome, coleção"
                 placeholder="Explorar coleções"
                 value={mobileSearch}
                 onChange={(event) => setMobileSearch(event.target.value)}
-                className="h-11 w-full rounded-[12px] bg-surface px-10 text-xs text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-11 w-full rounded-[12px] border-0 bg-surface px-10 text-xs text-foreground placeholder:text-foreground-muted"
               />
             </div>
-            <button
+            <Button
               type="button"
+              size="icon"
               onClick={() => window.dispatchEvent(new Event('kurio:open-catalog-filters'))}
               aria-label="Filtros"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-primary text-primary-foreground"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-primary text-primary-foreground shadow-none"
             >
               <SlidersHorizontal className="h-4 w-4" />
-            </button>
+            </Button>
           </form>
         )}
 
