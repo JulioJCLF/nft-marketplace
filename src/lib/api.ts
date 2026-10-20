@@ -8,6 +8,10 @@ export const api = axios.create({
   timeout: 10000,
 })
 
+if (typeof window !== 'undefined') {
+  ;(window as unknown as { __kurio_api__?: typeof api }).__kurio_api__ = api
+}
+
 // Request interceptor to inject auth token and scenario headers
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {

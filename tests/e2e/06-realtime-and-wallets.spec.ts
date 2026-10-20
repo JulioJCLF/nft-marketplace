@@ -116,7 +116,13 @@ test.describe('6. Perfil, Carteiras e Eventos Socket.IO em Tempo Real', () => {
     await expect(page.getByText('Bored Ape #7090')).toBeVisible()
     await waitForSocketConnection(page)
     const pong = await page.evaluate(async () => {
-      const { socket } = await import('/src/realtime/socket.ts')
+      const win = window as unknown as {
+        __kurio_socket__?: {
+          once: (evt: string, fn: (res: { timestamp: number }) => void) => void
+          emit: (evt: string) => void
+        }
+      }
+      const socket = win.__kurio_socket__ ?? (await import('/src/realtime/socket.ts')).socket
       return new Promise<{ timestamp: number }>((resolve, reject) => {
         const timeout = window.setTimeout(() => reject(new Error('Socket.IO ping timed out')), 3000)
         socket.once('pong', (response: { timestamp: number }) => {
@@ -130,7 +136,12 @@ test.describe('6. Perfil, Carteiras e Eventos Socket.IO em Tempo Real', () => {
 
     // 2. Trigger the MSW endpoint in the app page; this emits a real Socket.IO event to the client.
     const updateResponse = await page.evaluate(async () => {
-      const { socket } = await import('/src/realtime/socket.ts')
+      const win = window as unknown as {
+        __kurio_socket__?: {
+          once: (evt: string, fn: (res: unknown) => void) => void
+        }
+      }
+      const socket = win.__kurio_socket__ ?? (await import('/src/realtime/socket.ts')).socket
       const eventReceived = new Promise<unknown>((resolve) => {
         socket.once('nft.updated', resolve)
         window.setTimeout(() => resolve(null), 3000)
@@ -165,7 +176,12 @@ test.describe('6. Perfil, Carteiras e Eventos Socket.IO em Tempo Real', () => {
     expect(pending.orderId).toBeTruthy()
 
     const result = await page.evaluate(async (orderId) => {
-      const { socket } = await import('/src/realtime/socket.ts')
+      const win = window as unknown as {
+        __kurio_socket__?: {
+          once: (evt: string, fn: (event: { id: string; version: number; orderId: string; userId: string; status: string }) => void) => void
+        }
+      }
+      const socket = win.__kurio_socket__ ?? (await import('/src/realtime/socket.ts')).socket
       const received = new Promise<{ id: string; version: number; orderId: string; userId: string; status: string }>((resolve, reject) => {
         const timeout = window.setTimeout(() => reject(new Error('order.updated não recebido')), 4000)
         socket.once('order.updated', (event: { id: string; version: number; orderId: string; userId: string; status: string }) => {
@@ -210,7 +226,12 @@ test.describe('6. Perfil, Carteiras e Eventos Socket.IO em Tempo Real', () => {
   test('deve reconciliar a confirmação pendente após desconexão e recarregamento', async ({ page }) => {
     const pending = await submitPendingOrder(page)
     const updated = await page.evaluate(async (orderId) => {
-      const { socket } = await import('/src/realtime/socket.ts')
+      const win = window as unknown as {
+        __kurio_socket__?: {
+          disconnect: () => void
+        }
+      }
+      const socket = win.__kurio_socket__ ?? (await import('/src/realtime/socket.ts')).socket
       socket.disconnect()
       const token = localStorage.getItem('nft_auth_token')
       const response = await fetch('/api/system/trigger-order-update', {
@@ -230,7 +251,12 @@ test.describe('6. Perfil, Carteiras e Eventos Socket.IO em Tempo Real', () => {
   test('deve encerrar pagamento pendente como recusado, manter o carrinho e liberar estoque', async ({ page }) => {
     const pending = await submitPendingOrder(page)
     const result = await page.evaluate(async (orderId) => {
-      const { socket } = await import('/src/realtime/socket.ts')
+      const win = window as unknown as {
+        __kurio_socket__?: {
+          once: (evt: string, fn: (event: { orderId: string; status: string }) => void) => void
+        }
+      }
+      const socket = win.__kurio_socket__ ?? (await import('/src/realtime/socket.ts')).socket
       const received = new Promise<{ orderId: string; status: string }>((resolve, reject) => {
         const timeout = window.setTimeout(() => reject(new Error('order.updated não recebido')), 4000)
         socket.once('order.updated', (event: { orderId: string; status: string }) => {

@@ -14,3 +14,7 @@ export const socket: Socket = io(getSocketUrl(), {
   reconnectionDelayMax: 5000,
   timeout: 10000,
 })
+
+if (typeof window !== 'undefined') {
+  ;(window as unknown as { __kurio_socket__?: Socket }).__kurio_socket__ = socket
+}

@@ -4,13 +4,14 @@ import { api } from '@/lib/api'
 import { useAuth } from '@/features/auth/AuthContext'
 import { useRealtime } from '@/realtime/RealtimeContext'
 import { useQueryClient } from '@tanstack/react-query'
-import { useRouterState } from '@tanstack/react-router'
+import { useRouterState, useNavigate } from '@tanstack/react-router'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export const ScenarioBar: React.FC = () => {
   const isNFTDetailsPage = useRouterState({ select: (state) => state.location.pathname.startsWith('/nft/') })
+  const navigate = useNavigate()
   const { user, login, logout } = useAuth()
   const { isConnected, priceAlerts, dismissPriceAlert, eventsHistory } = useRealtime()
   const queryClient = useQueryClient()
@@ -24,30 +25,55 @@ export const ScenarioBar: React.FC = () => {
   useEffect(() => {
     const saved = localStorage.getItem('nft_active_scenario') || 'default'
     setActiveScenario(saved)
+
+    const onScenarioChanged = (event: Event) => {
+      const next = (event as CustomEvent<string>).detail || 'default'
+      setActiveScenario(next)
+    }
+    window.addEventListener('nft:scenario-changed', onScenarioChanged)
+    return () => window.removeEventListener('nft:scenario-changed', onScenarioChanged)
   }, [])
 
   const handleRunMandatoryScenario = async () => {
     setTriggerStatus('⚡ Executando Cenário Obrigatório: Autenticando Alice Vance...')
     try {
+      localStorage.removeItem('nft_active_scenario')
+      setActiveScenario('default')
+      await api.post('/system/scenario', { scenario: 'default' })
+      await api.post('/system/trigger-nft-update', {
+        nftId: 'bored-ape-7090',
+        price: '45.5000',
+        availableSupply: 1,
+      })
+
       if (!user || user.email !== 'alice@example.com') {
         await login('alice@example.com', 'Password123!')
       }
       setTriggerStatus('⚡ Adicionando NFT BAYC #7090 ao carrinho...')
-      await api.post('/cart', { nftId: 'bored-ape-7090', quantity: 1 })
-      await queryClient.invalidateQueries({ queryKey: ['cart'] })
+      try {
+        await api.post('/cart/items', { nftId: 'bored-ape-7090', quantity: 1 })
+      } catch {
+        // Item is already in Alice's cart at max supply (1)
+      }
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['nfts'] }),
+        queryClient.invalidateQueries({ queryKey: ['cart'] }),
+        queryClient.invalidateQueries({ queryKey: ['quote'] }),
+      ])
 
       setTriggerStatus('⚡ Redirecionando para /checkout...')
-      window.location.href = '/checkout'
+      await navigate({ to: '/checkout' })
 
       setTimeout(async () => {
         setTriggerStatus('⚡ Disparando evento Socket.IO (aumento de preço para 49.9 ETH)...')
         await api.post('/system/trigger-nft-update', {
           nftId: 'bored-ape-7090',
           price: '49.9000',
+          availableSupply: 1,
         })
         setTriggerStatus('⚡ Cenário Ativo: Cotação desatualizada bloqueia o checkout até revisão!')
         setTimeout(() => setTriggerStatus(null), 8000)
-      }, 1200)
+      }, 600)
     } catch {
       setTriggerStatus('Erro ao executar cenário automático.')
     }
@@ -55,8 +81,17 @@ export const ScenarioBar: React.FC = () => {
 
   const handleScenarioChange = async (newScenario: string) => {
     setActiveScenario(newScenario)
+    if (newScenario === 'default') {
+      localStorage.removeItem('nft_active_scenario')
+    } else {
+      localStorage.setItem('nft_active_scenario', newScenario)
+    }
     await api.post('/system/scenario', { scenario: newScenario })
-    queryClient.invalidateQueries()
+    if (newScenario === 'slow_network' || newScenario === '500_error' || newScenario === 'default') {
+      await queryClient.resetQueries({ queryKey: ['nfts'] })
+      await queryClient.resetQueries({ queryKey: ['nft'] })
+    }
+    await queryClient.invalidateQueries()
   }
 
   const handleReset = async () => {
@@ -75,11 +110,14 @@ export const ScenarioBar: React.FC = () => {
   const handleTriggerPriceChange = async (nftId: string, newPrice: string) => {
     setTriggerStatus(`Disparando alteração para ${nftId}...`)
     try {
+      const currentNft = queryClient.getQueryData<{ price?: string }>(['nft', nftId])
+      const targetPrice = currentNft?.price === newPrice ? '52.4000' : newPrice
       await api.post('/system/trigger-nft-update', {
         nftId,
-        price: newPrice,
+        price: targetPrice,
+        availableSupply: 1,
       })
-      setTriggerStatus(`Preço de ${nftId} atualizado para ${newPrice} ETH via Socket.IO!`)
+      setTriggerStatus(`Preço de ${nftId} atualizado para ${targetPrice} ETH via Socket.IO!`)
       setTimeout(() => setTriggerStatus(null), 4000)
     } catch {
       setTriggerStatus('Erro ao disparar evento.')
@@ -109,10 +147,19 @@ export const ScenarioBar: React.FC = () => {
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-400 animate-pulse" />
               <span>
-                <strong>Atenção em Tempo Real:</strong> O preço de{' '}
-                <span className="font-bold">{priceAlerts[0].nftName}</span> foi alterado de{' '}
-                <span>{priceAlerts[0].oldPrice} ETH</span> para{' '}
-                <span className="font-bold text-amber-300">{priceAlerts[0].newPrice} ETH</span>.
+                <strong>Atenção em Tempo Real:</strong>{' '}
+                {priceAlerts[0].isSoldOut && priceAlerts[0].oldPrice === priceAlerts[0].newPrice ? (
+                  <>
+                    O estoque de <span className="font-bold">{priceAlerts[0].nftName}</span>{' '}
+                    <span className="font-bold text-amber-300">esgotou</span> na rede.
+                  </>
+                ) : (
+                  <>
+                    O preço de <span className="font-bold">{priceAlerts[0].nftName}</span> foi alterado de{' '}
+                    <span>{priceAlerts[0].oldPrice} ETH</span> para{' '}
+                    <span className="font-bold text-amber-300">{priceAlerts[0].newPrice} ETH</span>.
+                  </>
+                )}{' '}
                 Cotações abertas exigem revisão antes da confirmação.
               </span>
             </div>
@@ -237,7 +284,7 @@ export const ScenarioBar: React.FC = () => {
 
             {/* Tab 1: Scenarios & Users */}
             {activeTab === 'scenarios' && (
-              <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="max-w-7xl mx-auto grid grid-cols-1 gap-3">
                 {/* Scenario Selector */}
                 <div>
                   <label htmlFor="scenario-select" className="block text-[11px] font-semibold text-foreground mb-1">
@@ -266,12 +313,12 @@ export const ScenarioBar: React.FC = () => {
                   <label className="block text-[11px] font-semibold text-foreground mb-1">
                     Disparar Evento Socket.IO Manual
                   </label>
-                  <div className="flex gap-1.5">
+                  <div className="grid grid-cols-2 gap-1.5">
                     <Button
                       variant="secondary"
                       size="sm"
                       onClick={() => handleTriggerPriceChange('bored-ape-7090', '49.9000')}
-                      className="flex-1 h-8 px-2 rounded bg-surface-secondary hover:bg-surface-tertiary border-border text-[11px] text-foreground font-medium"
+                      className="h-8 px-2 rounded bg-surface-secondary hover:bg-surface-tertiary border-border text-[11px] text-foreground font-medium truncate"
                       title="Altera o preço do BAYC #7090 para 49.9 ETH via Socket.IO"
                     >
                       Aumentar Preço BAYC #7090
@@ -280,7 +327,7 @@ export const ScenarioBar: React.FC = () => {
                       variant="secondary"
                       size="sm"
                       onClick={() => handleTriggerSoldOut('bored-ape-7090')}
-                      className="flex-1 h-8 px-2 rounded bg-surface-secondary hover:bg-surface-tertiary border-border text-[11px] text-red-300 font-medium"
+                      className="h-8 px-2 rounded bg-surface-secondary hover:bg-surface-tertiary border-border text-[11px] text-red-300 font-medium truncate"
                       title="Esgota estoque do BAYC #7090 via Socket.IO"
                     >
                       Esgotar Estoque

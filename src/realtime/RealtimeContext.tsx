@@ -68,10 +68,12 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       let nftName = event.nftId
       let oldPrice: string | undefined
+      let oldAvailableSupply: number | undefined
       const detailBeforeUpdate = queryClient.getQueryData<NFT>(['nft', event.nftId])
       if (detailBeforeUpdate) {
         nftName = detailBeforeUpdate.name
         oldPrice = detailBeforeUpdate.price
+        oldAvailableSupply = detailBeforeUpdate.availableSupply
       } else {
         const catalogEntries = queryClient.getQueriesData<CatalogResponse>({ queryKey: ['nfts'] })
         for (const [, cat] of catalogEntries) {
@@ -79,6 +81,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           if (match) {
             nftName = match.name
             oldPrice = match.price
+            oldAvailableSupply = match.availableSupply
             break
           }
         }
@@ -90,6 +93,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           if (match) {
             nftName = match.nft.name
             oldPrice = match.nft.price
+            oldAvailableSupply = match.nft.availableSupply
             break
           }
         }
@@ -141,14 +145,16 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       })
 
-      // 5. Alert only when a cached previous price exists and actually changed.
-      if (oldPrice !== undefined && oldPrice !== event.price) {
+      // 5. Alert when a cached previous price or availability actually changed.
+      const priceChanged = oldPrice !== undefined && oldPrice !== event.price
+      const supplyChanged = oldAvailableSupply !== undefined && oldAvailableSupply !== event.availableSupply
+      if (priceChanged || supplyChanged) {
         setPriceAlerts((prev) => [
           ...prev.filter((a) => a.nftId !== event.nftId),
           {
             nftId: event.nftId,
             nftName,
-            oldPrice,
+            oldPrice: oldPrice ?? event.price,
             newPrice: event.price,
             availableSupply: event.availableSupply,
             isSoldOut: event.isSoldOut,

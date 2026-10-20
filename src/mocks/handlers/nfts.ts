@@ -39,6 +39,11 @@ export const nftHandlers = [
     const override = handleScenarioOverride(request)
     if (override) return override
 
+    const scenario = mockDB.getScenario()
+    if (scenario === 'slow_network') {
+      await delay(1200)
+    }
+
     const { id } = params as { id: string }
     const currentUser = extractAuthUser(request)
 
@@ -103,6 +108,14 @@ export const nftHandlers = [
   http.delete('/api/favorites/:id', ({ request, params }) => {
     const override = handleScenarioOverride(request)
     if (override) return override
+
+    const scenario = mockDB.getScenario()
+    if (scenario === 'favorite_fail') {
+      return HttpResponse.json(
+        { message: 'Falha simulada ao remover favorito.', code: 'FAVORITE_ERROR' },
+        { status: 500 }
+      )
+    }
 
     const { errorResponse, user } = requireAuth(request)
     if (errorResponse) return errorResponse

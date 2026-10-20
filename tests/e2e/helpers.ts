@@ -37,7 +37,27 @@ export async function loginAsAlice(page: Page) {
 
 export async function waitForSocketConnection(page: Page, timeoutMs = 10000) {
   await page.evaluate(async (timeout) => {
-    const { socket } = await import('/src/realtime/socket.ts')
+    const getSocket = async () => {
+      const win = window as unknown as {
+        __kurio_socket__?: {
+          connected: boolean
+          on: (evt: string, fn: () => void) => void
+          off: (evt: string, fn: () => void) => void
+        }
+      }
+      if (win.__kurio_socket__) return win.__kurio_socket__
+      try {
+        const mod = await import('/src/realtime/socket.ts')
+        return mod.socket
+      } catch {
+        for (let i = 0; i < 30; i += 1) {
+          if (win.__kurio_socket__) return win.__kurio_socket__
+          await new Promise((r) => window.setTimeout(r, 100))
+        }
+        throw new Error('Socket.IO client não encontrado na janela.')
+      }
+    }
+    const socket = await getSocket()
     if (socket.connected) return
 
     await new Promise<void>((resolve, reject) => {

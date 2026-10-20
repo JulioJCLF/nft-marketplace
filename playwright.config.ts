@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test'
 
 const port = Number(process.env.PLAYWRIGHT_PORT ?? 3000)
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${port}`
+const isRemoteTarget = /^https?:\/\/(?!localhost|127\.0\.0\.1)/.test(baseURL)
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -43,10 +44,12 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
-    command: `npm run dev -- --host 127.0.0.1 --port ${port}`,
-    url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 30000,
-  },
+  webServer: isRemoteTarget
+    ? undefined
+    : {
+        command: `npm run dev -- --host 127.0.0.1 --port ${port}`,
+        url: baseURL,
+        reuseExistingServer: !process.env.CI,
+        timeout: 30000,
+      },
 })

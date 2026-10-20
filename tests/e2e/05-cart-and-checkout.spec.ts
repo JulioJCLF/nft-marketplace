@@ -123,7 +123,8 @@ test.describe('5. Carrinho, Cupons, Idempotência e Confirmação de Pedido', ()
     await page.goto('/checkout')
     await expect(page.getByRole('heading', { name: /finalizar compra & pagamento/i })).toBeVisible()
     const result = await page.evaluate(async () => {
-      const { api } = await import('/src/lib/api.ts')
+      const win = window as unknown as { __kurio_api__?: { post: (url: string, data: unknown) => Promise<{ status: number }> } }
+      const api = win.__kurio_api__ ?? (await import('/src/lib/api.ts')).api
       const payload = {
         idempotencyKey: `e2e-conflict-${Date.now()}`,
         items: [{ nftId: 'bored-ape-7090', quantity: 1 }],

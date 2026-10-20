@@ -52,7 +52,11 @@ export const NFTDetailsPage: React.FC<NFTDetailsPageProps> = ({ nftId }) => {
       return response.data
     },
     staleTime: 1000 * 30,
-    placeholderData: () => INITIAL_NFTS.find((item) => item.id === nftId),
+    placeholderData: () => {
+      const activeScenario = typeof window !== 'undefined' ? localStorage.getItem('nft_active_scenario') : null
+      if (activeScenario && activeScenario !== 'default') return undefined
+      return INITIAL_NFTS.find((item) => item.id === nftId)
+    },
   })
 
   // Fetch Recommended NFTs from same collection

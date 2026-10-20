@@ -5,8 +5,13 @@ import { extractAuthUser, handleScenarioOverride } from './helper'
 export const authHandlers = [
   // POST /api/auth/login
   http.post('/api/auth/login', async ({ request }) => {
-    const override = handleScenarioOverride(request)
-    if (override) return override
+    const scenario = request.headers.get('X-Mock-Scenario') || mockDB.getScenario()
+    if (scenario === '500_error') {
+      return HttpResponse.json(
+        { message: 'Erro interno simulado do servidor (500)', code: 'INTERNAL_SERVER_ERROR' },
+        { status: 500 }
+      )
+    }
 
     const body = (await request.json()) as { email?: string; password?: string }
     const { email, password } = body
@@ -40,6 +45,9 @@ export const authHandlers = [
 
     // Merge guest cart items into authenticated user cart
     mockDB.mergeGuestCartIntoUser(cleanUser.id)
+    if (mockDB.getScenario() === '401_expired') {
+      mockDB.setScenario(null)
+    }
 
     return HttpResponse.json({
       token,
@@ -49,8 +57,13 @@ export const authHandlers = [
 
   // POST /api/auth/register
   http.post('/api/auth/register', async ({ request }) => {
-    const override = handleScenarioOverride(request)
-    if (override) return override
+    const scenario = request.headers.get('X-Mock-Scenario') || mockDB.getScenario()
+    if (scenario === '500_error') {
+      return HttpResponse.json(
+        { message: 'Erro interno simulado do servidor (500)', code: 'INTERNAL_SERVER_ERROR' },
+        { status: 500 }
+      )
+    }
 
     const body = (await request.json()) as { name?: string; email?: string; password?: string }
     const { name, email, password } = body
@@ -91,6 +104,9 @@ export const authHandlers = [
 
     // Merge any items accumulated in guest cart
     mockDB.mergeGuestCartIntoUser(cleanUser.id)
+    if (mockDB.getScenario() === '401_expired') {
+      mockDB.setScenario(null)
+    }
 
     return HttpResponse.json({ token, user: cleanUser }, { status: 201 })
   }),

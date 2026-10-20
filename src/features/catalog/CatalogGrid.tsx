@@ -78,6 +78,9 @@ export const CatalogGrid: React.FC<CatalogGridProps> = ({ searchParams, onUpdate
     },
     staleTime: 1000 * 30,
     placeholderData: () => {
+      const activeScenario = typeof window !== 'undefined' ? localStorage.getItem('nft_active_scenario') : null
+      if (activeScenario && activeScenario !== 'default') return undefined
+
       const hasDefaultCatalogFilters =
         !searchParams.search &&
         !searchParams.minPrice &&

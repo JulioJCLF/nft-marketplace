@@ -95,6 +95,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { token: receivedToken, user: loggedUser } = response.data
     localStorage.setItem(TOKEN_KEY, receivedToken)
+    if (localStorage.getItem('nft_active_scenario') === '401_expired') {
+      localStorage.removeItem('nft_active_scenario')
+      window.dispatchEvent(new CustomEvent('nft:scenario-changed', { detail: 'default' }))
+    }
     setToken(receivedToken)
     setUser(loggedUser)
     setAuthModalOpen(false)
@@ -114,6 +118,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { token: receivedToken, user: registeredUser } = response.data
     localStorage.setItem(TOKEN_KEY, receivedToken)
+    if (localStorage.getItem('nft_active_scenario') === '401_expired') {
+      localStorage.removeItem('nft_active_scenario')
+      window.dispatchEvent(new CustomEvent('nft:scenario-changed', { detail: 'default' }))
+    }
     setToken(receivedToken)
     setUser(registeredUser)
     setAuthModalOpen(false)

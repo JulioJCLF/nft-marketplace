@@ -10,9 +10,11 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error) => {
-        // Do not retry 401 Unauthorized or 404 Not Found errors
+        // Do not retry 401 Unauthorized or 404 Not Found errors or simulated 500 scenario
         const status = (error as { status?: number })?.status
+        const activeScenario = typeof window !== 'undefined' ? localStorage.getItem('nft_active_scenario') : null
         if (status === 401 || status === 404 || status === 409) return false
+        if (status === 500 && activeScenario === '500_error') return false
         return failureCount < 2
       },
       refetchOnWindowFocus: false,
